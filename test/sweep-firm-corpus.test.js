@@ -11,7 +11,7 @@ const CLI = join(ROOT, "src/sweep-firm-corpus.js");
 const NOW = "2099-07-17T12:00:00.000Z";
 
 function cleanupWitness() {
-  rmSync(join(ROOT, "data/sweeps/2099"), { recursive: true, force: true });
+  rmSync(join(ROOT, "data/journals/sweeps/2099"), { recursive: true, force: true });
 }
 test.beforeEach(cleanupWitness);
 test.after(cleanupWitness);
@@ -119,7 +119,7 @@ test("witnesses the sweep to this node's own append-only data pool", () => {
   const dir = fixture();
   try {
     run(["--root", dir, "--term", "widget"]);
-    const lines = readFileSync(join(ROOT, "data/sweeps/2099/07/17/2099-07-17-corpus-management-team-sweeps.jsonl"), "utf8").trim().split("\n").map(JSON.parse);
+    const lines = readFileSync(join(ROOT, "data/journals/sweeps/2099/07/17/2099-07-17-corpus-management-team-sweeps.jsonl"), "utf8").trim().split("\n").map(JSON.parse);
     assert.equal(lines.length, 1);
     assert.equal(lines[0].ambiguousGroups, 1);
   } finally {

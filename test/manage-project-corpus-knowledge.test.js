@@ -11,7 +11,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "src/manage-project-corpus-knowledge.js");
 const WRAPPER = join(ROOT, "lib/management/skills/managing-project-corpus-knowledge/scripts/manage-project-corpus-knowledge.js");
 const NOW = "2099-07-17T12:00:00.000Z";
-function cleanup() { for (const type of ["events", "eavt"]) rmSync(join(ROOT, "data", type, "2099"), { recursive: true, force: true }); }
+function cleanup() { for (const type of ["events", "eavt"]) rmSync(join(ROOT, "data/journals", type, "2099"), { recursive: true, force: true }); }
 test.beforeEach(cleanup); test.after(cleanup);
 function canonical(v) { if (Array.isArray(v)) return `[${v.map(canonical).join(",")}]`; if (v && typeof v === "object") return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canonical(v[k])}`).join(",")}}`; return JSON.stringify(v); }
 function digest(v) { return `sha256:${createHash("sha256").update(canonical(v)).digest("hex")}`; }
@@ -36,10 +36,10 @@ test("admits an ActivityStreams offer, preserves the snapshot, and emits linked 
   assert.ok(stages.execute.knowledgeRefs.includes(input.object.corpus.digest));
   const validateStage = new Ajv2020({ strict: false }).compile(JSON.parse(readFileSync(join(ROOT, "lib/schemas/mape-stage.schema.json"), "utf8")));
   for (const value of Object.values(stages)) assert.equal(validateStage(value), true, JSON.stringify(validateStage.errors));
-  const eavt = lines(join(ROOT, "data/eavt/2099/07/17/2099-07-17-corpus-management-team-eavt.jsonl"));
+  const eavt = lines(join(ROOT, "data/journals/eavt/2099/07/17/2099-07-17-corpus-management-team-eavt.jsonl"));
   assert.equal(eavt.length, 7);
   for (const row of eavt) assert.deepEqual(Object.keys(row).sort(), ["a", "e", "t", "v"]);
-  const events = lines(join(ROOT, "data/events/2099/07/17/2099-07-17-corpus-management-team-events.jsonl"));
+  const events = lines(join(ROOT, "data/journals/events/2099/07/17/2099-07-17-corpus-management-team-events.jsonl"));
   assert.equal(events[0].specversion, "1.0");
   assert.equal(events[0].data.activityId, input.id);
   assert.equal("object" in events[0].data, false);
@@ -80,8 +80,8 @@ test("concurrent appends preserve every complete JSONL row", async () => {
     const child = spawn(process.execPath, [CLI, "--now", NOW], { stdio: ["pipe", "ignore", "pipe"] }); let error = "";
     child.stderr.on("data", (chunk) => { error += chunk; }); child.on("exit", (code) => code === 0 ? ok() : fail(new Error(error || `exit ${code}`))); child.stdin.end(encoded);
   })));
-  assert.equal(lines(join(ROOT, "data/events/2099/07/17/2099-07-17-corpus-management-team-events.jsonl")).length, count);
-  assert.equal(lines(join(ROOT, "data/eavt/2099/07/17/2099-07-17-corpus-management-team-eavt.jsonl")).length, count * 7);
+  assert.equal(lines(join(ROOT, "data/journals/events/2099/07/17/2099-07-17-corpus-management-team-events.jsonl")).length, count);
+  assert.equal(lines(join(ROOT, "data/journals/eavt/2099/07/17/2099-07-17-corpus-management-team-eavt.jsonl")).length, count * 7);
 });
 
 test("refuses filesystem authority overrides and schema-invalid extra fields", () => {

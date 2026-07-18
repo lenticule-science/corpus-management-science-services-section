@@ -27,10 +27,15 @@ function inputValue() {
   return JSON.parse(path ? readFileSync(resolve(path), "utf8") : readFileSync(0, "utf8"));
 }
 
+// Every type this node's data pool carries is an append-only log (events,
+// eavt), so both seat under the journals bucket of the settled
+// data/{journals,ledgers,state,records} convention.
+const DATA_BUCKETS = { events: "journals", eavt: "journals" };
 function dataFile(dataRoot, type, instant) {
   const day = instant.slice(0, 10);
   const [year, month, date] = day.split("-");
-  return join(dataRoot, type, year, month, date, `${day}-${NODE_ID}-${type}.jsonl`);
+  const bucket = DATA_BUCKETS[type] ?? type;
+  return join(dataRoot, bucket, type, year, month, date, `${day}-${NODE_ID}-${type}.jsonl`);
 }
 
 function appendJsonl(path, values) {

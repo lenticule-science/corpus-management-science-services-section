@@ -30,9 +30,14 @@ function response(type, source, object) {
   return { "@context": CONTEXT, id: contentId({ actor: ACTOR, type, inReplyTo: source?.id ?? null, object }), type, actor: ACTOR, target: source?.actor ?? LMT_ACTOR, inReplyTo: source?.id ?? "urn:activity:unidentified", object };
 }
 function emit(value, code = 0) { process.stdout.write(`${JSON.stringify(value, null, 2)}\n`); process.exitCode = code; }
+// events/eavt are append-only logs (journals bucket); recoveries is this
+// node's own recovery record (records bucket) — per the settled
+// data/{journals,ledgers,state,records} convention.
+const DATA_BUCKETS = { events: "journals", eavt: "journals", recoveries: "records" };
 function datedPath(type, instant) {
   const day = instant.slice(0, 10); const [year, month, date] = day.split("-");
-  return join(NODE_ROOT, "data", type, year, month, date, `${day}-${NODE_ID}-${type}.jsonl`);
+  const bucket = DATA_BUCKETS[type] ?? type;
+  return join(NODE_ROOT, "data", bucket, type, year, month, date, `${day}-${NODE_ID}-${type}.jsonl`);
 }
 function append(type, value, instant) {
   const path = datedPath(type, instant); mkdirSync(dirname(path), { recursive: true }); appendFileSync(path, `${JSON.stringify(value)}\n`, "utf8");

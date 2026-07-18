@@ -180,7 +180,7 @@ function appendJsonl(path, values) {
 function witnessSweep(instant, result) {
   const day = instant.slice(0, 10);
   const [year, month, date] = day.split("-");
-  appendJsonl(join(NODE_ROOT, "data/sweeps", year, month, date, `${day}-${NODE_ID}-sweeps.jsonl`), [
+  appendJsonl(join(NODE_ROOT, "data/journals/sweeps", year, month, date, `${day}-${NODE_ID}-sweeps.jsonl`), [
     { time: instant, root: result.root, terms: result.terms, fileCount: result.fileCount, ambiguousGroups: result.ambiguousGroups, inferenceMode: result.inference.mode }
   ]);
 }

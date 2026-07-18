@@ -17,7 +17,7 @@ const LMT = "urn:ame:leader-movement-team";
 
 let base; let fixtureRoot; let lmtRoot;
 function cleanupProviderEvidence() {
-  for (const type of ["events", "eavt", "recoveries"]) rmSync(join(ROOT, "data", type, "2099"), { recursive: true, force: true });
+  for (const [type, bucket] of [["events", "journals"], ["eavt", "journals"], ["recoveries", "records"]]) rmSync(join(ROOT, "data", bucket, type, "2099"), { recursive: true, force: true });
 }
 test.beforeEach(() => {
   cleanupProviderEvidence(); base = mkdtempSync(join(tmpdir(), "cmt-recovery-contract-")); fixtureRoot = join(base, "territory"); lmtRoot = join(base, "leader-movement-team");
@@ -73,7 +73,7 @@ test("LMT contracts a bounded recovery and receives source-bound context plus ex
   assert.equal(result.contextualBundle.sources.some((item) => item.path.includes("/.git/")), false);
   assert.ok(result.gapBundle.gaps.some((gap) => gap.type === "unmatched-term" && gap.term === "missing theorem"));
   assert.ok(result.gapBundle.gaps.some((gap) => gap.type === "excerpt-truncation" && gap.path === sourcePath));
-  assert.ok(existsSync(join(ROOT, "data/recoveries/2099/07/17/2099-07-17-corpus-management-team-recoveries.jsonl")));
+  assert.ok(existsSync(join(ROOT, "data/records/recoveries/2099/07/17/2099-07-17-corpus-management-team-recoveries.jsonl")));
 });
 
 test("candidate limits become a gap rather than a silent loss", () => {
