@@ -1,0 +1,16 @@
+{
+  "kind": "ownership-law-shadow",
+  "node": "corpus-management-team",
+  "owners": ["board-of-directors", "executive-office", "knowledge-services-section"],
+  "effective-law": {
+    "direct-contracting": true,
+    "owner-gateway-required": false,
+    "rules": [
+      "owner law is included in descendant law",
+      "this node owns its lib, content, data, admission, refusal, contracts, and ledgers",
+      "owners receive no implicit runtime or write authority",
+      "customer territory remains outside this membrane and is never mutated",
+      "knowledge differences are held as witnessed obstructions rather than overwritten"
+    ]
+  }
+}

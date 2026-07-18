@@ -1,0 +1,15 @@
+{
+  "id": "obsmetrologia-enterprise-observation-coordination-measurement",
+  "kind": "unfulfilled-capability-dependency",
+  "consumer": "corpus-management-team",
+  "intended-provider": "obsmetrologia",
+  "intended-contract": "deriving-an-enterprise-cover-nerve-rank-leg",
+  "capability": "derive a rank-leg receipt by recomputing cover incidence, cover nerve, H1rank, cycle rank, cells, edges, and connected components from admitted enterprise records",
+  "formal-basis": {
+    "carrier": "scripts/EnterpriseObservationContractRevision4DesignScratch.lean",
+    "declarations": ["ValuatedSiteCover", "ObservationStateRevision4", "coverIncidence", "coverNerve", "coverNerve_h1_from_incidence"]
+  },
+  "state": "unfulfilled",
+  "reason": "The checked Lean carrier is design scratch and no separately contractable callable Obsmetrologia service currently issues a recomputable incidence-derived measurement receipt.",
+  "forbidden-substitutes": ["caller-supplied rank", "caller-supplied cover digest", "copied MetroPlat runtime", "uncertified physical kT ln 2 equivalence"]
+}

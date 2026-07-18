@@ -1,0 +1,9 @@
+{
+  "id": "managing-project-corpus-knowledge",
+  "name": "managing project corpus knowledge",
+  "authority": "managing-project-corpus-knowledge",
+  "work": "project-corpus-knowledge-management",
+  "claim": "contracting-enterprise",
+  "skills": ["managing-project-corpus-knowledge"],
+  "delegation": false
+}

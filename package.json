@@ -1,0 +1,40 @@
+{
+  "name": "@emsenn/corpus-management-team",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "A directly contractable micro-enterprise that recovers source-bound prior research and analyzes immutable project-corpus snapshots.",
+  "bin": {
+    "manage-project-corpus-knowledge": "./src/manage-project-corpus-knowledge.js",
+    "solicit-service": "./src/contract-prior-research-recovery.js",
+    "invoke-service": "./src/contract-prior-research-recovery.js"
+  },
+  "scripts": {
+    "check": "node --check src/manage-project-corpus-knowledge.js && node --check src/sweep-firm-corpus.js && node --check src/contract-prior-research-recovery.js && node --check src/lib/knowledge-forms.mjs && node --check test/manage-project-corpus-knowledge.test.js && node --check test/sweep-firm-corpus.test.js && node --check test/contract-prior-research-recovery.test.js",
+    "test": "node --test --test-concurrency=1 test/manage-project-corpus-knowledge.test.js test/sweep-firm-corpus.test.js test/contract-prior-research-recovery.test.js"
+  },
+  "dependencies": {"ajv": "^8.20.0"},
+  "x-agentic-metro-enterprise": {
+    "node-id": "corpus-management-team",
+    "owners": ["board-of-directors", "executive-office", "knowledge-services-section"],
+    "membrane": {"law": "lib/", "lasting-instances": "content/", "append-only-instances": "data/"},
+    "admission": "a directly addressed ActivityStreams corpus-management Offer or an LMT-negotiated recovery contract with authority attenuated to explicit filesystem roots and terms",
+    "refusal": "malformed wireforms, missing or changed recovery scope, absent read authority, corpus-digest mismatch, customer-territory mutation, and ungrounded Landauer pricing",
+    "transport-status": "ActivityStreams value-level wireform implemented; ActivityPub server-to-server deployment is not claimed",
+    "operation-catalog": {
+      "solicit-service": {
+        "contract": "recovering-prior-research",
+        "accepts": "ActivityStreams Offer<ServiceSolicitation>",
+        "returns": "ActivityStreams Offer<ExecutableServiceOffer>|Question|Reject",
+        "timeoutMs": 30000
+      },
+      "invoke-service": {
+        "contract": "recovering-prior-research",
+        "accepts": "ActivityStreams Accept<ServiceContract>",
+        "returns": "ActivityStreams Accept<PriorResearchRecoveryResult>|Reject",
+        "timeoutMs": 120000
+      }
+    }
+  },
+  "license": "UNLICENSED"
+}
