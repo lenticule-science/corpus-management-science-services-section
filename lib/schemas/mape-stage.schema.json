@@ -5,7 +5,7 @@
   "required": ["id", "type", "loopId", "stage", "predecessors", "knowledgeRefs", "evidence"],
   "additionalProperties": false,
   "properties": {
-    "id": {"type": "string", "pattern": "^urn:sha256:[a-f0-9]{64}$"},
+    "id": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"},
     "type": {"const": "MAPEStage"},
     "loopId": {"type": "string"},
     "stage": {"enum": ["monitor", "analyze", "plan", "execute"]},

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the Corpus Management Team research sweep every fifteen minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+Persistent=true
+Unit=corpus-management-research-sweep.service
+
+[Install]
+WantedBy=timers.target

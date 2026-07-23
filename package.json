@@ -10,12 +10,13 @@
     "invoke-service": "./src/contract-prior-research-recovery.js"
   },
   "scripts": {
-    "check": "node --check src/manage-project-corpus-knowledge.js && node --check src/sweep-firm-corpus.js && node --check src/contract-prior-research-recovery.js && node --check src/lib/knowledge-forms.mjs && node --check test/manage-project-corpus-knowledge.test.js && node --check test/sweep-firm-corpus.test.js && node --check test/contract-prior-research-recovery.test.js",
+    "check": "node --check src/law.mjs && node --check src/manage-project-corpus-knowledge.js && node --check src/sweep-firm-corpus.js && node --check src/contract-prior-research-recovery.js && node --check src/lib/knowledge-forms.mjs && node --check test/manage-project-corpus-knowledge.test.js && node --check test/sweep-firm-corpus.test.js && node --check test/contract-prior-research-recovery.test.js",
     "test": "node --test --test-concurrency=1 test/manage-project-corpus-knowledge.test.js test/sweep-firm-corpus.test.js test/contract-prior-research-recovery.test.js"
   },
-  "dependencies": {"ajv": "^8.20.0"},
+  "dependencies": {"ajv": "^8.20.0", "@emsenn/rmn-semantic-conformance": "file:../../../../../../../561-group/services/lenticule-science/services/obsmetrological-services-section/services/rmn-semantic-conformance", "@emsenn/rwil-rdf-services": "file:../../../../../../../561-group/services/lenticule-science/services/obsmetrological-services-section/services/rwil-rdf-services"},
   "x-agentic-metro-enterprise": {
     "node-id": "corpus-management-team",
+    "actor": "urn:ame:corpus-management-team",
     "owners": ["board-of-directors", "executive-office", "knowledge-services-section"],
     "membrane": {"law": "lib/", "lasting-instances": "content/", "append-only-instances": "data/"},
     "admission": "a directly addressed ActivityStreams corpus-management Offer or an LMT-negotiated recovery contract with authority attenuated to explicit filesystem roots and terms",
@@ -23,15 +24,15 @@
     "transport-status": "ActivityStreams value-level wireform implemented; ActivityPub server-to-server deployment is not claimed",
     "operation-catalog": {
       "solicit-service": {
-        "contract": "recovering-prior-research",
+        "contract": "ni:///sha-256;ugqKIc6VFzqzfbuJ6JNrMB4Gognt169Wm1ZC8cf3vj0",
         "accepts": "ActivityStreams Offer<ServiceSolicitation>",
         "returns": "ActivityStreams Offer<ExecutableServiceOffer>|Question|Reject",
         "timeoutMs": 30000
       },
       "invoke-service": {
-        "contract": "recovering-prior-research",
+        "contract": "ni:///sha-256;ugqKIc6VFzqzfbuJ6JNrMB4Gognt169Wm1ZC8cf3vj0",
         "accepts": "ActivityStreams Accept<ServiceContract>",
-        "returns": "ActivityStreams Accept<PriorResearchRecoveryResult>|Reject",
+        "returns": "ActivityStreams Accept<PriorResearchRecoveryResult|PriorResearchProjectionResult>|Reject",
         "timeoutMs": 120000
       }
     }

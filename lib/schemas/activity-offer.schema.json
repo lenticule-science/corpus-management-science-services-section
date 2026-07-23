@@ -18,7 +18,7 @@
       "properties": {
         "type": {"const": "ManageProjectCorpusKnowledge"},
         "project": {"type": "string", "minLength": 1},
-        "contract": {"enum": ["managing-project-corpus-knowledge", "project-management-team-hires-corpus-management-team"]},
+        "contract": {"enum": ["ni:///sha-256;RuLwA6UH_Dp24oeqpRmEZNvOrVD4-YlT69krQzpW4cM", "ni:///sha-256;CLPW2dkvm4_g4pKK6eZ1yeSt_9Krwi_Xrp0xtl1RJZk"]},
         "corpus": {"type": "object", "required": ["digest", "forms"], "additionalProperties": false, "properties": {"digest": {"$ref": "#/$defs/digest"}, "forms": {"type": "array", "items": {"$ref": "#/$defs/form"}}}},
         "capability": {"$ref": "#/$defs/capability"},
         "pricing": {"$ref": "#/$defs/pricing"}
@@ -26,7 +26,7 @@
     }
   },
   "$defs": {
-    "digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "digest": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"},
     "provenance": {"type": "object", "minProperties": 1},
     "goalPredicate": {"oneOf": [
       {"type": "object", "required": ["type", "form"], "additionalProperties": false, "properties": {"type": {"const": "form-exists"}, "form": {"type": "string", "minLength": 1}}},

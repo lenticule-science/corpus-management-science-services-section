@@ -2,16 +2,18 @@
 
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, statSync } from "node:fs";
+import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PRIOR_RESEARCH_CONTRACT } from "./law.mjs";
 import { canonical, contentId, digest } from "./lib/knowledge-forms.mjs";
+import { createSettlementStore, readSettlementRecords } from "@emsenn/rwil-rdf-services/client";
 
 const CONTEXT = "https://www.w3.org/ns/activitystreams";
 const NODE_ID = "corpus-management-team";
 const ACTOR = `urn:ame:${NODE_ID}`;
 const LMT_ACTOR = "urn:ame:leader-movement-team";
-const CONTRACT = "recovering-prior-research";
+const CONTRACT = PRIOR_RESEARCH_CONTRACT;
 const NODE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DEFAULT_MAX_FILES = 80;
 const DEFAULT_MAX_BYTES = 24_000;
@@ -24,40 +26,47 @@ const RG_MAX_BUFFER = 32 * 1024 * 1024;
 function arg(flag) { const index = process.argv.indexOf(flag); return index === -1 ? undefined : process.argv[index + 1]; }
 function operation() { return arg("--operation") ?? "solicit-service"; }
 function now() { return arg("--now") ?? new Date().toISOString(); }
-function input() { return JSON.parse(readFileSync(0, "utf8")); }
+function input() { return JSON.parse(readFileSync(arg("--input-file") ?? 0, "utf8")); }
 function attachments(note) { return Array.isArray(note?.attachment) ? note.attachment : note?.attachment === undefined ? [] : [note.attachment]; }
 function response(type, source, object) {
   return { "@context": CONTEXT, id: contentId({ actor: ACTOR, type, inReplyTo: source?.id ?? null, object }), type, actor: ACTOR, target: source?.actor ?? LMT_ACTOR, inReplyTo: source?.id ?? "urn:activity:unidentified", object };
 }
-function emit(value, code = 0) { process.stdout.write(`${JSON.stringify(value, null, 2)}\n`); process.exitCode = code; }
-// events/eavt are append-only logs (journals bucket); recoveries is this
-// node's own recovery record (records bucket) — per the settled
-// data/{journals,ledgers,state,records} convention.
-const DATA_BUCKETS = { events: "journals", eavt: "journals", recoveries: "records" };
-function datedPath(type, instant) {
-  const day = instant.slice(0, 10); const [year, month, date] = day.split("-");
-  const bucket = DATA_BUCKETS[type] ?? type;
-  return join(NODE_ROOT, "data", bucket, type, year, month, date, `${day}-${NODE_ID}-${type}.jsonl`);
+function emit(value, code = 0) {
+  const serialized = `${JSON.stringify(value, null, 2)}\n`;
+  const outputFile = arg("--output-file");
+  if (outputFile === undefined) process.stdout.write(serialized);
+  else writeFileSync(outputFile, serialized, "utf8");
+  process.exitCode = code;
 }
-function append(type, value, instant) {
-  const path = datedPath(type, instant); mkdirSync(dirname(path), { recursive: true }); appendFileSync(path, `${JSON.stringify(value)}\n`, "utf8");
-}
-function witness(activity, outcome, instant, details = {}) {
+function dataRoot() { return resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data")); }
+function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, dataRoot: dataRoot(), agentUrl: process.env.RWIL_RDF_AGENT }); }
+async function append(type, value, instant) { return store().record({ category: `${CONTRACT}.${type}`, recordedAt: instant, record: value }); }
+async function witness(activity, outcome, instant, details = {}) {
   const body = { source: ACTOR, type: `org.emsenn.${NODE_ID}.${outcome}`, subject: activity?.id ?? "urn:activity:unidentified", time: instant, data: { activityDigest: digest(activity ?? null), contract: CONTRACT, ...details } };
   const event = { specversion: "1.0", id: contentId(body), ...body, datacontenttype: "application/json" };
-  append("events", event, instant); append("eavt", { e: body.subject, a: "activity/outcome", v: outcome, t: event.id }, instant); return event;
+  await append("activitystreams", activity ?? {}, instant); await append("events", event, instant); await append("eavt", { e: body.subject, a: "activity/outcome", v: outcome, t: event.id }, instant); return event;
 }
-function reject(source, reason, instant, details = {}) {
+async function reject(source, reason, instant, details = {}) {
   const value = response("Reject", source, { type: "Refusal", contract: CONTRACT, reason, ...details });
-  witness(source, "activity.rejected", instant, { reason }); emit(value, 2);
+  await witness(source, "activity.rejected", instant, { reason }); emit(value, 2);
 }
 function integer(value, fallback, maximum) {
   return Number.isInteger(value) && value > 0 ? Math.min(value, maximum) : fallback;
 }
 function normalizedRequest(sourceActivity) {
-  const supplied = attachments(sourceActivity?.object).find((item) => item?.type === "PriorResearchRecoveryRequest");
+  const supplied = attachments(sourceActivity?.object).find((item) => item?.type === "PriorResearchRecoveryRequest" || item?.type === "PriorResearchProjectionRequest");
   if (!supplied) return null;
+  if (supplied.type === "PriorResearchProjectionRequest") return {
+    kind: "projection",
+    sourceResultId: supplied.sourceResultId,
+    contextualBundleDigest: supplied.contextualBundleDigest,
+    gapBundleDigest: supplied.gapBundleDigest,
+    terms: Array.isArray(supplied.terms) ? [...new Set(supplied.terms.map((term) => typeof term === "string" ? term.trim() : term).filter(Boolean))] : supplied.terms,
+    maxFiles: integer(supplied.maxFiles, DEFAULT_MAX_MATCHES, MAX_FILES),
+    executionMode: supplied.executionMode ?? "live"
+  };
   return {
+    kind: "recovery",
     terms: Array.isArray(supplied.terms) ? [...new Set(supplied.terms.map((term) => typeof term === "string" ? term.trim() : term).filter(Boolean))] : supplied.terms,
     roots: Array.isArray(supplied.roots) ? [...new Set(supplied.roots.map((root) => typeof root === "string" ? resolve(root) : root))] : supplied.roots,
     maxFiles: integer(supplied.maxFiles, DEFAULT_MAX_FILES, MAX_FILES),
@@ -69,9 +78,13 @@ function normalizedRequest(sourceActivity) {
 function requestProblems(request, checkFilesystem = false) {
   const problems = [];
   if (!request || !Array.isArray(request.terms) || request.terms.length === 0 || request.terms.some((term) => typeof term !== "string" || term.length < 2 || term.length > 160)) problems.push("terms(2..160 character strings)");
-  if (!request || !Array.isArray(request.roots) || request.roots.length === 0 || request.roots.some((root) => typeof root !== "string" || !isAbsolute(root))) problems.push("roots(absolute paths)");
+  if (request?.kind === "projection") {
+    if (typeof request.sourceResultId !== "string" || !request.sourceResultId.startsWith("ni:///sha-256;")) problems.push("sourceResultId(ni)");
+    if (typeof request.contextualBundleDigest !== "string" || !request.contextualBundleDigest.startsWith("ni:///sha-256;")) problems.push("contextualBundleDigest(ni)");
+    if (typeof request.gapBundleDigest !== "string" || !request.gapBundleDigest.startsWith("ni:///sha-256;")) problems.push("gapBundleDigest(ni)");
+  } else if (!request || !Array.isArray(request.roots) || request.roots.length === 0 || request.roots.some((root) => typeof root !== "string" || !isAbsolute(root))) problems.push("roots(absolute paths)");
   if (!request || !["dry-run", "live"].includes(request.executionMode)) problems.push("executionMode(dry-run|live)");
-  if (checkFilesystem && Array.isArray(request?.roots)) for (const root of request.roots) {
+  if (request?.kind !== "projection" && checkFilesystem && Array.isArray(request?.roots)) for (const root of request.roots) {
     try { if (!existsSync(root) || !statSync(root).isDirectory()) problems.push(`unreadable-root:${root}`); } catch { problems.push(`unreadable-root:${root}`); }
   }
   return [...new Set(problems)];
@@ -80,29 +93,31 @@ function recognizes(sourceActivity) {
   if (normalizedRequest(sourceActivity)) return true;
   return typeof sourceActivity?.object?.content === "string" && /recover|collect|find|inventory|prior (?:art|research)|corpus/iu.test(sourceActivity.object.content);
 }
-function solicit(activity, instant) {
+async function solicit(activity, instant) {
   if (activity?.["@context"] !== CONTEXT || activity.type !== "Offer" || activity.target !== ACTOR || activity.object?.type !== "ServiceSolicitation") {
-    reject(activity, "solicitation must be an ActivityStreams Offer<ServiceSolicitation> addressed to this provider", instant); return;
+    await reject(activity, "solicitation must be an ActivityStreams Offer<ServiceSolicitation> addressed to this provider", instant); return;
   }
   const sourceActivity = activity.object.sourceActivity;
-  if (!recognizes(sourceActivity)) { reject(activity, "source intent does not request prior-research recovery", instant); return; }
+  if (!recognizes(sourceActivity)) { await reject(activity, "source intent does not request prior-research recovery", instant); return; }
   const request = normalizedRequest(sourceActivity);
   const missing = requestProblems(request);
   if (missing.length) {
     const question = response("Question", activity, { type: "ServiceTermsRequired", contract: CONTRACT, sourceActivity: sourceActivity?.id, missing });
-    witness(activity, "terms.requested", instant, { missing }); emit(question); return;
+    await witness(activity, "terms.requested", instant, { missing }); emit(question); return;
   }
-  const effects = request.executionMode === "live" ? ["filesystem-read"] : [];
+  const effects = request.executionMode === "live" && request.kind === "recovery" ? ["filesystem-read"] : [];
   const object = {
     type: "ExecutableServiceOffer", contract: CONTRACT, sourceActivity: sourceActivity.id,
     intentSignature: "urn:service-intent:recover-digest-bound-prior-research",
     request, requestDigest: digest(request),
-    scope: { roots: request.roots, terms: request.terms, maxFiles: request.maxFiles, maxBytesPerFile: request.maxBytesPerFile, maxMatchesPerFile: request.maxMatchesPerFile },
+    scope: request.kind === "projection"
+      ? { sourceResultId: request.sourceResultId, contextualBundleDigest: request.contextualBundleDigest, gapBundleDigest: request.gapBundleDigest, terms: request.terms, maxFiles: request.maxFiles }
+      : { roots: request.roots, terms: request.terms, maxFiles: request.maxFiles, maxBytesPerFile: request.maxBytesPerFile, maxMatchesPerFile: request.maxMatchesPerFile },
     operation: "invoke-service", effects, requirements: effects.map((effect) => ({ type: "ResourceGrant", effect })),
     evidence: ["digest-bound-contextual-bundle", "explicit-gap-bundle", "provider-local-recovery-record", "no-customer-write"]
   };
   const offer = response("Offer", activity, object);
-  witness(activity, "offer.emitted", instant, { offer: offer.id, requestDigest: object.requestDigest }); emit(offer);
+  await witness(activity, "offer.emitted", instant, { offer: offer.id, requestDigest: object.requestDigest }); emit(offer);
 }
 function validateInvocation(activity) {
   if (activity?.["@context"] !== CONTEXT || activity.type !== "Accept" || activity.target !== ACTOR) return "invocation must be an ActivityStreams Accept addressed to this provider";
@@ -179,7 +194,7 @@ function statusOf(path) {
   if (normalized.includes("/experimental.")) return "experimental";
   return "current";
 }
-function fileDigest(bytes) { return `sha256:${createHash("sha256").update(bytes).digest("hex")}`; }
+function fileDigest(bytes) { return `ni:///sha-256;${createHash("sha256").update(bytes).digest("base64url")}`; }
 function sourceRecord(path, indexedTerms, request, ownerCache) {
   const bytes = readFileSync(path); const text = bytes.subarray(0, request.maxBytesPerFile).toString("utf8");
   const lines = text.split(/\r?\n/u); const terms = request.terms.map((term) => [term, term.toLowerCase()]);
@@ -225,28 +240,62 @@ function recover(request, instant) {
   for (const source of sources) if (source.excerptTruncated) gaps.push({ type: "excerpt-truncation", path: source.path, byteSize: source.byteSize, admittedBytes: request.maxBytesPerFile });
   const contextualBundle = { type: "ContextualBundle", roots: request.roots, terms: request.terms, sourceCount: sources.length, sources };
   const gapBundle = { type: "GapBundle", gapCount: gaps.length, gaps };
-  const resultBody = { type: "PriorResearchRecoveryResult", contract: CONTRACT, recoveredAt: instant, requestDigest: digest(request), contextualBundle, contextualBundleDigest: digest(contextualBundle), gapBundle, gapBundleDigest: digest(gapBundle), customerTerritoryMutation: false };
+  const resultBody = { type: "PriorResearchRecoveryResult", contract: CONTRACT, recoveredAt: instant, requestDigest: digest(request), contextualBundle, contextualBundleDigest: digest(contextualBundle), gapBundle, gapBundleDigest: digest(gapBundle), filesystemReads: sources.length, customerTerritoryMutation: false };
   return { id: contentId(resultBody), ...resultBody };
 }
-function invoke(activity, instant) {
+function recoveryById(request) {
+  for (const candidate of readSettlementRecords(dataRoot(), `${CONTRACT}.recoveries`)) {
+      if (candidate.id !== request.sourceResultId) continue;
+      // This is the provider's own append-only recovery record. Its bundle
+      // digests and content-addressed result ID were computed when the record
+      // was formed; reparsing and canonically reserializing a multi-megabyte
+      // bundle on every rental would turn inventory lookup into a new sweep.
+      // Match the exact stored identifiers here. The smaller projected value
+      // receives fresh digests and the customer verifies those independently.
+      if (candidate.contextualBundleDigest !== request.contextualBundleDigest) throw new Error("source recovery contextual bundle digest does not match the requested immutable value");
+      if (candidate.gapBundleDigest !== request.gapBundleDigest) throw new Error("source recovery gap bundle digest does not match the requested immutable value");
+      return candidate;
+  }
+  throw new Error("no provider-owned recovery matches the requested result id and digests");
+}
+function projectExistingRecovery(request, instant) {
+  const sourceRecovery = recoveryById(request);
+  const terms = request.terms.map((term) => [term, term.toLowerCase()]);
+  const candidates = sourceRecovery.contextualBundle.sources.map((source) => {
+    const haystack = [source.path, source.relativeToRoot, ...(source.matchedTerms ?? []), ...(source.snippets ?? []).flatMap((snippet) => [snippet.text, ...(snippet.matchedTerms ?? [])])].filter(Boolean).join("\n").toLowerCase();
+    const matchedTerms = terms.filter(([, lower]) => haystack.includes(lower)).map(([term]) => term);
+    return { source, matchedTerms };
+  }).filter(({ matchedTerms }) => matchedTerms.length > 0).sort((left, right) => right.matchedTerms.length - left.matchedTerms.length || (right.source.score ?? 0) - (left.source.score ?? 0) || left.source.path.localeCompare(right.source.path));
+  const selected = candidates.slice(0, request.maxFiles).map(({ source, matchedTerms }) => ({ ...source, projectionMatchedTerms: matchedTerms }));
+  const gaps = [];
+  for (const [term] of terms) if (!selected.some((source) => source.projectionMatchedTerms.includes(term))) gaps.push(candidates.some((candidate) => candidate.matchedTerms.includes(term)) ? { type: "term-not-admitted", term, matchingCandidates: candidates.filter((candidate) => candidate.matchedTerms.includes(term)).length } : { type: "unmatched-term", term });
+  if (candidates.length > selected.length) gaps.push({ type: "candidate-truncation", matched: candidates.length, admitted: selected.length, omitted: candidates.length - selected.length });
+  const contextualBundle = { type: "ContextualBundle", sourceRecovery: sourceRecovery.id, terms: request.terms, sourceCount: selected.length, sources: selected };
+  const gapBundle = { type: "GapBundle", sourceRecoveryGapBundleDigest: sourceRecovery.gapBundleDigest, gapCount: gaps.length, gaps };
+  const resultBody = { type: "PriorResearchProjectionResult", contract: CONTRACT, projectedAt: instant, requestDigest: digest(request), sourceRecovery: sourceRecovery.id, sourceContextualBundleDigest: sourceRecovery.contextualBundleDigest, sourceGapBundleDigest: sourceRecovery.gapBundleDigest, contextualBundle, contextualBundleDigest: digest(contextualBundle), gapBundle, gapBundleDigest: digest(gapBundle), filesystemReads: 0, customerTerritoryMutation: false };
+  return { id: contentId(resultBody), ...resultBody };
+}
+async function invoke(activity, instant) {
   const invalid = validateInvocation(activity);
-  if (invalid) { reject(activity, invalid, instant); return; }
+  if (invalid) { await reject(activity, invalid, instant); return; }
   const offer = activity.object.offer; const request = offer.object.request;
   if (request.executionMode === "dry-run") {
     const object = { type: "PriorResearchRecoveryResult", contract: CONTRACT, disposition: "ready", sourceActivity: offer.object.sourceActivity, requestDigest: offer.object.requestDigest, dryRun: true, observations: { filesystemReads: 0, recordsWritten: 0 } };
-    witness(activity, "contract.validated", instant, { requestDigest: object.requestDigest }); emit(response("Accept", activity, object)); return;
+    await witness(activity, "contract.validated", instant, { requestDigest: object.requestDigest }); emit(response("Accept", activity, object)); return;
   }
   let result;
-  try { result = recover(request, instant); } catch (error) { reject(activity, "recovery failed before producing a digest-bound result", instant, { diagnostic: error.message }); return; }
-  append("recoveries", result, instant);
-  witness(activity, "contract.completed", instant, { result: result.id, contextualBundleDigest: result.contextualBundleDigest, gapBundleDigest: result.gapBundleDigest });
+  try { result = request.kind === "projection" ? projectExistingRecovery(request, instant) : recover(request, instant); } catch (error) { await reject(activity, "recovery failed before producing a digest-bound result", instant, { diagnostic: error.message }); return; }
+  await append(request.kind === "projection" ? "projections" : "recoveries", result, instant);
+  await witness(activity, "contract.completed", instant, { result: result.id, contextualBundleDigest: result.contextualBundleDigest, gapBundleDigest: result.gapBundleDigest });
   emit(response("Accept", activity, { ...result, sourceActivity: offer.object.sourceActivity, dryRun: false }));
 }
 
-const instant = now(); let activity;
-try { activity = input(); } catch (error) { reject({}, `invalid JSON input: ${error.message}`, instant); }
-if (activity !== undefined) {
-  if (operation() === "solicit-service") solicit(activity, instant);
-  else if (operation() === "invoke-service") invoke(activity, instant);
-  else reject(activity, `unknown provider operation ${operation()}`, instant);
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const instant = now(); let activity;
+  try { activity = input(); } catch (error) { await reject({}, `invalid JSON input: ${error.message}`, instant); }
+  if (activity !== undefined) {
+    if (operation() === "solicit-service") await solicit(activity, instant);
+    else if (operation() === "invoke-service") await invoke(activity, instant);
+    else await reject(activity, `unknown provider operation ${operation()}`, instant);
+  }
 }

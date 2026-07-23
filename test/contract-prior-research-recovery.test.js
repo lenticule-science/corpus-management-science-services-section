@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import test from "node:test";
+import { readSettlementRecords } from "@emsenn/rwil-rdf-services/client";
+import { startRwilProviderProcess } from "@emsenn/rwil-rdf-services/test-provider";
+import { PRIOR_RESEARCH_CONTRACT } from "../src/law.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PROVIDER = join(ROOT, "src/contract-prior-research-recovery.js");
@@ -15,12 +18,11 @@ const CONTEXT = "https://www.w3.org/ns/activitystreams";
 const LEADER = "urn:leader:emsenn";
 const LMT = "urn:ame:leader-movement-team";
 
-let base; let fixtureRoot; let lmtRoot;
-function cleanupProviderEvidence() {
-  for (const [type, bucket] of [["events", "journals"], ["eavt", "journals"], ["recoveries", "records"]]) rmSync(join(ROOT, "data", bucket, type, "2099"), { recursive: true, force: true });
-}
+let rwil; let base; let fixtureRoot; let lmtRoot; let dataRoot;
+test.before(async () => { rwil = await startRwilProviderProcess(); });
+test.after(async () => { await rwil.close(); });
 test.beforeEach(() => {
-  cleanupProviderEvidence(); base = mkdtempSync(join(tmpdir(), "cmt-recovery-contract-")); fixtureRoot = join(base, "territory"); lmtRoot = join(base, "leader-movement-team");
+  base = mkdtempSync(join(tmpdir(), "cmt-recovery-contract-")); fixtureRoot = join(base, "territory"); lmtRoot = join(base, "leader-movement-team"); dataRoot = join(base, "provider-rwil");
   mkdirSync(join(fixtureRoot, "current"), { recursive: true }); mkdirSync(join(fixtureRoot, "assets", "legacy"), { recursive: true }); mkdirSync(join(fixtureRoot, ".git", "modules"), { recursive: true });
   writeFileSync(join(fixtureRoot, "package.json"), `${JSON.stringify({ name: "@fixture/territory", "x-agentic-metro-enterprise": { "node-id": "fixture-territory" } })}\n`);
   writeFileSync(join(fixtureRoot, "current", "koios-runtime.md"), "Koios News owns a source cycle.\nFresh Web evidence enters the newswire.\n");
@@ -28,7 +30,9 @@ test.beforeEach(() => {
   writeFileSync(join(fixtureRoot, ".git", "modules", "koios.news.pack"), "Koios repository internals are not corpus evidence.\n");
   cpSync(SOURCE_LMT, lmtRoot, { recursive: true, filter: (path) => !path.startsWith(join(SOURCE_LMT, "data")) });
 });
-test.afterEach(() => { cleanupProviderEvidence(); rmSync(base, { recursive: true, force: true }); });
+test.afterEach(() => { rmSync(base, { recursive: true, force: true }); });
+
+function executionEnvironment() { return { ...process.env, RWIL_RDF_AGENT: rwil.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot }; }
 
 function activity(id, grant = true, overrides = {}) {
   const request = {
@@ -40,16 +44,19 @@ function activity(id, grant = true, overrides = {}) {
   return { "@context": CONTEXT, id: `urn:leader:${id}`, type: "Create", actor: LEADER, target: LMT, object: { type: "Note", content: "Recover our prior Koios research into a digest-bound packet.", attachment } };
 }
 function runLeader(value) {
-  return spawnSync(process.execPath, [join(lmtRoot, "src/run-leader-movement.js"), "--now", NOW, "--provider-root", ROOT], { input: JSON.stringify(value), encoding: "utf8", timeout: 120000 });
+  return spawnSync(process.execPath, [join(lmtRoot, "src/run-leader-movement.js"), "--now", NOW, "--provider-root", ROOT], { input: JSON.stringify(value), encoding: "utf8", timeout: 120000, env: executionEnvironment() });
 }
 function providerResult(execution) {
   const output = JSON.parse(execution.stdout);
   return output.object.result.object;
 }
+function runProvider(operation, value) {
+  return spawnSync(process.execPath, [PROVIDER, "--operation", operation, "--now", NOW], { input: JSON.stringify(value), encoding: "utf8", timeout: 120000, env: executionEnvironment() });
+}
 
 test("advertises terms rather than silently inferring an unbounded filesystem sweep", () => {
   const solicitation = { "@context": CONTEXT, id: "urn:solicitation:missing", type: "Offer", actor: LMT, target: "urn:ame:corpus-management-team", object: { type: "ServiceSolicitation", sourceActivity: { id: "urn:leader:missing", object: { type: "Note", content: "recover prior research" } } } };
-  const execution = spawnSync(process.execPath, [PROVIDER, "--operation", "solicit-service", "--now", NOW], { input: JSON.stringify(solicitation), encoding: "utf8" });
+  const execution = spawnSync(process.execPath, [PROVIDER, "--operation", "solicit-service", "--now", NOW], { input: JSON.stringify(solicitation), encoding: "utf8", env: executionEnvironment() });
   assert.equal(execution.status, 0, execution.stderr || execution.stdout);
   const output = JSON.parse(execution.stdout); assert.equal(output.type, "Question"); assert.ok(output.object.missing.includes("terms(2..160 character strings)"));
 });
@@ -68,12 +75,12 @@ test("LMT contracts a bounded recovery and receives source-bound context plus ex
   const output = JSON.parse(execution.stdout); assert.equal(output.type, "Accept"); assert.equal(output.object.provider, "urn:ame:corpus-management-team");
   const result = providerResult(execution); assert.equal(result.type, "PriorResearchRecoveryResult"); assert.equal(result.dryRun, false); assert.equal(result.customerTerritoryMutation, false);
   const source = result.contextualBundle.sources.find((item) => item.path === sourcePath); assert.ok(source); assert.equal(source.owner.nodeId, "fixture-territory"); assert.equal(source.status, "current");
-  assert.equal(source.digest, `sha256:${createHash("sha256").update(before).digest("hex")}`); assert.deepEqual(readFileSync(sourcePath), before);
+  assert.equal(source.digest, `ni:///sha-256;${createHash("sha256").update(before).digest("base64url")}`); assert.deepEqual(readFileSync(sourcePath), before);
   assert.ok(result.contextualBundle.sources.some((item) => item.status === "legacy"));
   assert.equal(result.contextualBundle.sources.some((item) => item.path.includes("/.git/")), false);
   assert.ok(result.gapBundle.gaps.some((gap) => gap.type === "unmatched-term" && gap.term === "missing theorem"));
   assert.ok(result.gapBundle.gaps.some((gap) => gap.type === "excerpt-truncation" && gap.path === sourcePath));
-  assert.ok(existsSync(join(ROOT, "data/records/recoveries/2099/07/17/2099-07-17-corpus-management-team-recoveries.jsonl")));
+  assert.equal(readSettlementRecords(dataRoot, `${PRIOR_RESEARCH_CONTRACT}.recoveries`).length, 1);
 });
 
 test("candidate limits become a gap rather than a silent loss", () => {
@@ -91,4 +98,33 @@ test("a term that exists only beyond the cap is distinguished from an absent ter
   const gaps = providerResult(execution).gapBundle.gaps;
   assert.ok(gaps.some((gap) => gap.type === "term-not-admitted" && gap.term === "rare theorem"));
   assert.ok(gaps.some((gap) => gap.type === "unmatched-term" && gap.term === "absent theorem"));
+});
+
+test("projects one existing recovery into a bounded issue packet without rereading source territory", () => {
+  const sourcePath = join(fixtureRoot, "current", "koios-runtime.md");
+  const recoveryExecution = runLeader(activity("projection-source", true, { maxBytesPerFile: 1000 }));
+  assert.equal(recoveryExecution.status, 0, recoveryExecution.stderr || recoveryExecution.stdout);
+  const recovery = providerResult(recoveryExecution);
+  const original = recovery.contextualBundle.sources.find((source) => source.path === sourcePath);
+  assert.ok(original);
+  writeFileSync(sourcePath, "The source territory changed after the contracted recovery.\n");
+  const projectionRequest = { type: "PriorResearchProjectionRequest", sourceResultId: recovery.id, contextualBundleDigest: recovery.contextualBundleDigest, gapBundleDigest: recovery.gapBundleDigest, terms: ["source cycle", "missing projection term"], maxFiles: 2, executionMode: "live" };
+  const source = { "@context": CONTEXT, id: "urn:koios:projection-source", type: "Create", actor: "urn:ame:koios-news", target: "urn:ame:corpus-management-team", object: { type: "Note", content: "Project cached prior research for one issue.", attachment: [projectionRequest] } };
+  const solicitation = { "@context": CONTEXT, id: "urn:koios:projection-solicitation", type: "Offer", actor: source.actor, target: source.target, object: { type: "ServiceSolicitation", sourceActivity: source } };
+  const offered = runProvider("solicit-service", solicitation);
+  assert.equal(offered.status, 0, offered.stderr || offered.stdout);
+  const offer = JSON.parse(offered.stdout);
+  assert.deepEqual(offer.object.effects, []);
+  const capability = { type: "Capability", holder: source.target, invocationTarget: source.target, parentOffer: offer.id, allowedActions: ["invoke-service"], attenuation: { requestDigest: offer.object.requestDigest, providerScope: offer.object.scope } };
+  const accepted = { "@context": CONTEXT, id: "urn:koios:projection-accept", type: "Accept", actor: source.actor, target: source.target, object: { type: "ServiceContract", contract: PRIOR_RESEARCH_CONTRACT, offer, capability } };
+  const projected = runProvider("invoke-service", accepted);
+  assert.equal(projected.status, 0, projected.stderr || projected.stdout);
+  const result = JSON.parse(projected.stdout).object;
+  assert.equal(result.type, "PriorResearchProjectionResult");
+  assert.equal(result.filesystemReads, 0);
+  assert.equal(result.sourceRecovery, recovery.id);
+  assert.equal(result.contextualBundle.sources[0].digest, original.digest);
+  assert.match(result.contextualBundle.sources[0].snippets.map((snippet) => snippet.text).join("\n"), /source cycle/i);
+  assert.ok(result.gapBundle.gaps.some((gap) => gap.type === "unmatched-term" && gap.term === "missing projection term"));
+  assert.equal(readSettlementRecords(dataRoot, `${PRIOR_RESEARCH_CONTRACT}.projections`).length, 1);
 });

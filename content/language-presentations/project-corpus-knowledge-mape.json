@@ -6,7 +6,7 @@
   "readings": ["observe project knowledge forms", "derive identifier schema provenance and claim obstructions", "plan non-mutating normalization advice", "emit a corpus-management result"],
   "writings": ["append node-local EAVT witnesses", "append node-local CloudEvents router notifications"],
   "codecs": ["application/activity+json", "application/cloudevents+json", "application/jsonl"],
-  "conformance": "content/contracts/managing-project-corpus-knowledge.json",
+  "conformance": "content/contracts/managing-project-corpus-knowledge.rml",
   "closure-rules": ["each stage references its predecessor", "contradictions remain explicit", "analysis selects no action", "execution emits advice and never writes customer territory"],
   "rung": "scott"
 }

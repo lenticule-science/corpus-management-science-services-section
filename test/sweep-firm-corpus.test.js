@@ -1,20 +1,23 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import test from "node:test";
+import { readSettlementRecords } from "@emsenn/rwil-rdf-services/client";
+import { startRwilProviderProcess } from "@emsenn/rwil-rdf-services/test-provider";
+import { CORPUS_KNOWLEDGE_CONTRACT } from "../src/law.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "src/sweep-firm-corpus.js");
 const NOW = "2099-07-17T12:00:00.000Z";
 
-function cleanupWitness() {
-  rmSync(join(ROOT, "data/journals/sweeps/2099"), { recursive: true, force: true });
-}
-test.beforeEach(cleanupWitness);
-test.after(cleanupWitness);
+let rwil, dataRoot;
+test.before(async () => { rwil = await startRwilProviderProcess(); });
+test.after(async () => { await rwil.close(); });
+test.beforeEach(() => { dataRoot = mkdtempSync(join(tmpdir(), "corpus-sweep-rwil-")); });
+test.afterEach(() => { rmSync(dataRoot, { recursive: true, force: true }); });
 
 function fixture() {
   const dir = mkdtempSync(join(tmpdir(), "sweep-firm-corpus-fixture-"));
@@ -28,7 +31,7 @@ function fixture() {
 }
 
 function run(extraArgs) {
-  return spawnSync(process.execPath, [CLI, "--now", NOW, ...extraArgs], { encoding: "utf8" });
+  return spawnSync(process.execPath, [CLI, "--now", NOW, ...extraArgs], { encoding: "utf8", env: { ...process.env, RWIL_RDF_AGENT: rwil.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot } });
 }
 
 test("refuses a missing --root", () => {
@@ -56,6 +59,8 @@ test("finds bounded matches, groups by base name, and leaves an unambiguous file
     const output = JSON.parse(result.stdout);
     assert.equal(output.fileCount, 3);
     assert.equal(output.truncated, false);
+    assert.match(output.material.materialId, /^ni:\/\/\/sha-256;/u);
+    assert.equal(output.material.entries.length, 3);
     const gadget = output.forms.find((f) => f.id.endsWith("gadget.schema.json"));
     assert.deepEqual(gadget.claims, []);
     assert.deepEqual(gadget.provenance.peers, []);
@@ -64,7 +69,29 @@ test("finds bounded matches, groups by base name, and leaves an unambiguous file
   }
 });
 
-test("flags an ambiguous name-match and makes one real dry-run call to anthropic-inference-team's harness", () => {
+test("emits a content-addressed, proposal-only territory recognition without forming an enterprise", () => {
+  const dir = fixture();
+  try {
+    const result = run(["--root", dir, "--term", "schema.json"]);
+    assert.equal(result.status, 0, result.stderr);
+    const output = JSON.parse(result.stdout);
+    assert.match(output.territoryRecognition.proposalId, /^ni:\/\/\/sha-256;/u);
+    assert.equal(output.territoryRecognition.disposition, "advisory-proposal-only");
+    assert.equal(output.territoryRecognition.enterpriseFormed, false);
+    assert.equal(output.territoryRecognition.territoryMutated, false);
+    assert.equal(output.territoryRecognition.providerSelected, false);
+    assert.equal(output.territoryRecognition.spendAuthorized, false);
+    assert.equal(output.territoryRecognition.candidates[0].kind, "unclassified-material");
+    assert.match(output.formationLeadCandidate.candidateId, /^ni:\/\/\/sha-256;/u);
+    assert.deepEqual(output.formationLeadCandidate.missingCapabilities, ["territory-recognition-review"]);
+    assert.equal(output.formationLeadCandidate.transportAuthenticated, false);
+    assert.equal(output.formationLeadCandidate.enterpriseFormed, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("leaves an ambiguous name-match at FOUR-bottom without invoking a model", () => {
   const dir = fixture();
   try {
     const result = run(["--root", dir, "--term", "widget"]);
@@ -72,28 +99,27 @@ test("flags an ambiguous name-match and makes one real dry-run call to anthropic
     const output = JSON.parse(result.stdout);
     assert.equal(output.fileCount, 2);
     assert.equal(output.ambiguousGroups, 1);
-    assert.equal(output.inference.mode, "dry-run");
-    assert.ok(output.inference.harness.endsWith("anthropic-inference-team/run-one-exchange.mjs"), output.inference.harness);
+    assert.equal(output.inference.mode, "not-performed");
     const widgetGroup = output.groups.find((g) => g.slug === "widget");
-    assert.equal(widgetGroup.verdict.mode, "dry-run");
-    assert.equal(widgetGroup.verdict.packetValid, true);
-    assert.equal(widgetGroup.verdict.canonical, null, "a dry-run must never fabricate a verdict");
+    assert.equal(widgetGroup.verdict.mode, "unresolved");
+    assert.deepEqual(widgetGroup.verdict.outcome, { positiveEvidence: false, negativeEvidence: false });
+    assert.equal(widgetGroup.verdict.canonical, null);
     for (const form of output.forms.filter((f) => f.provenance.slug === "widget")) {
-      assert.deepEqual(form.claims, [{ entity: "widget", attribute: "is-canonical", value: true, charge: "held" }]);
+      assert.deepEqual(form.claims, []);
     }
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("re-runs the team's own analyzeForms pipeline over the swept forms, contesting a resolved verdict", () => {
+test("obsolete inference flags cannot create evidence or change the deterministic assay", () => {
   const dir = fixture();
   try {
     const result = run(["--root", dir, "--term", "widget", "--inference-harness", "/no/such/harness.mjs"]);
     const output = JSON.parse(result.stdout);
-    assert.equal(output.inference.mode, "skipped");
-    assert.equal(output.groups.find((g) => g.slug === "widget").verdict.mode, "skipped");
-    assert.equal(output.issues.length, 0, "no contest without a resolved verdict");
+    assert.equal(output.inference.mode, "not-performed");
+    assert.equal(output.groups.find((g) => g.slug === "widget").verdict.mode, "unresolved");
+    assert.equal(output.issues.length, 0, "no evidence exists to contest");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -115,13 +141,15 @@ test("respects --max-files and reports what it dropped rather than truncating si
   }
 });
 
-test("witnesses the sweep to this node's own append-only data pool", () => {
+test("witnesses the sweep through the account-bound RWIL provider", () => {
   const dir = fixture();
   try {
     run(["--root", dir, "--term", "widget"]);
-    const lines = readFileSync(join(ROOT, "data/journals/sweeps/2099/07/17/2099-07-17-corpus-management-team-sweeps.jsonl"), "utf8").trim().split("\n").map(JSON.parse);
-    assert.equal(lines.length, 1);
-    assert.equal(lines[0].ambiguousGroups, 1);
+    const records = readSettlementRecords(dataRoot, `${CORPUS_KNOWLEDGE_CONTRACT}.sweeps`);
+    assert.equal(records.length, 1);
+    assert.equal(records[0].ambiguousGroups, 1);
+    assert.match(records[0].territoryRecognition, /^ni:\/\/\/sha-256;/u);
+    assert.match(records[0].formationLeadCandidate, /^ni:\/\/\/sha-256;/u);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -1,15 +1,17 @@
 #!/usr/bin/env node
-import { appendFileSync, mkdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CORPUS_KNOWLEDGE_CONTRACT, PROJECT_CORPUS_SEAM_CONTRACT } from "./law.mjs";
 import Ajv2020 from "ajv/dist/2020.js";
+import { createSettlementStore } from "@emsenn/rwil-rdf-services/client";
 import { canonical, digest, contentId, analyzeForms } from "./lib/knowledge-forms.mjs";
 
 const NODE_ID = "corpus-management-team";
 const ACTOR = `urn:ame:${NODE_ID}`;
 const CONTEXT = "https://www.w3.org/ns/activitystreams";
-const SERVICE_CONTRACT = "managing-project-corpus-knowledge";
-const BILATERAL_CONTRACT = "project-management-team-hires-corpus-management-team";
+const SERVICE_CONTRACT = CORPUS_KNOWLEDGE_CONTRACT;
+const BILATERAL_CONTRACT = PROJECT_CORPUS_SEAM_CONTRACT;
 const NODE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const validateOfferSchema = new Ajv2020({ allErrors: true, strict: false }).compile(JSON.parse(readFileSync(join(NODE_ROOT, "lib/schemas/activity-offer.schema.json"), "utf8")));
 
@@ -27,24 +29,9 @@ function inputValue() {
   return JSON.parse(path ? readFileSync(resolve(path), "utf8") : readFileSync(0, "utf8"));
 }
 
-// Every type this node's data pool carries is an append-only log (events,
-// eavt), so both seat under the journals bucket of the settled
-// data/{journals,ledgers,state,records} convention.
-const DATA_BUCKETS = { events: "journals", eavt: "journals" };
-function dataFile(dataRoot, type, instant) {
-  const day = instant.slice(0, 10);
-  const [year, month, date] = day.split("-");
-  const bucket = DATA_BUCKETS[type] ?? type;
-  return join(dataRoot, bucket, type, year, month, date, `${day}-${NODE_ID}-${type}.jsonl`);
-}
-
-function appendJsonl(path, values) {
-  mkdirSync(dirname(path), { recursive: true });
-  for (const value of values) appendFileSync(path, `${JSON.stringify(value)}\n`, "utf8");
-}
-
-function witness(activity, outcome, instant, stageIds = []) {
-  const dataRoot = join(NODE_ROOT, "data");
+function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, dataRoot: resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data")), agentUrl: process.env.RWIL_RDF_AGENT }); }
+async function witness(activity, outcome, instant, stageIds = []) {
+  const provider = store();
   const activityDigest = digest(activity);
   const notificationData = {
     activityId: typeof activity?.id === "string" ? activity.id : "urn:activity:unidentified",
@@ -64,7 +51,6 @@ function witness(activity, outcome, instant, stageIds = []) {
     datacontenttype: "application/json",
     data: notificationData
   };
-  appendJsonl(dataFile(dataRoot, "events", instant), [cloudEvent]);
   const transaction = cloudEvent.id;
   const eavt = [
     { e: notificationData.activityId, a: "activity/digest", v: activityDigest, t: transaction },
@@ -72,7 +58,10 @@ function witness(activity, outcome, instant, stageIds = []) {
     { e: notificationData.activityId, a: "contract/id", v: notificationData.contract, t: transaction },
     ...stageIds.map((id) => ({ e: notificationData.activityId, a: "mape/stage", v: id, t: transaction }))
   ];
-  appendJsonl(dataFile(dataRoot, "eavt", instant), eavt);
+  const contract = notificationData.contract;
+  await provider.record({ category: `${contract}.activitystreams`, recordedAt: instant, record: activity });
+  await provider.record({ category: `${contract}.events`, recordedAt: instant, record: cloudEvent });
+  for (const row of eavt) await provider.record({ category: `${contract}.eavt`, recordedAt: instant, record: row });
 }
 
 function rejection(activity, reason) {
@@ -87,9 +76,9 @@ function rejection(activity, reason) {
   };
 }
 
-function refuse(activity, reason, instant) {
+async function refuse(activity, reason, instant) {
   const output = rejection(activity, reason);
-  witness(activity ?? {}, "activity.rejected", instant);
+  await witness(activity ?? {}, "activity.rejected", instant);
   process.stdout.write(`${JSON.stringify(output, null, 2)}\n`);
   process.exitCode = 2;
 }
@@ -149,13 +138,13 @@ if (arg("--data-root") !== undefined || arg("--test-data-root") !== undefined) {
 if (!process.exitCode) try {
   activity = inputValue();
 } catch (error) {
-  refuse({}, `invalid JSON input: ${error.message}`, instant);
+  await refuse({}, `invalid JSON input: ${error.message}`, instant);
 }
 
 if (!process.exitCode) {
   const invalid = validateActivity(activity) ?? validatePricing(activity.object.pricing);
   if (invalid) {
-    refuse(activity, invalid, instant);
+    await refuse(activity, invalid, instant);
   } else {
     const corpus = activity.object.corpus;
     const contract = activity.object.contract;
@@ -203,7 +192,7 @@ if (!process.exitCode) {
       inReplyTo: activity.id,
       object: { id: resultId, ...resultBody }
     };
-    witness(activity, "activity.admitted", instant, [monitor.id, analyze.id, plan.id, execute.id]);
+    await witness(activity, "activity.admitted", instant, [monitor.id, analyze.id, plan.id, execute.id]);
     process.stdout.write(`${JSON.stringify(output, null, 2)}\n`);
   }
 }

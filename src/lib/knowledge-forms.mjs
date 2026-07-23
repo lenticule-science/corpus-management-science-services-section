@@ -1,20 +1,11 @@
-import { createHash } from "node:crypto";
+import { semanticId } from "@emsenn/rmn-semantic-conformance";
+import { relationalRwilDocument } from "@emsenn/rwil-rdf-services/client";
 
-export function canonical(value) {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
-  if (value && typeof value === "object") {
-    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
+export function canonical(value) { return JSON.stringify(relationalRwilDocument(value)); }
 
-export function digest(value) {
-  return `sha256:${createHash("sha256").update(canonical(value)).digest("hex")}`;
-}
+export function digest(value) { return semanticId(relationalRwilDocument(value)); }
 
-export function contentId(value) {
-  return `urn:${digest(value)}`;
-}
+export function contentId(value) { return digest(value); }
 
 export function analyzeForms(forms) {
   const issues = [];
