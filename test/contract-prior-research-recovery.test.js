@@ -17,6 +17,13 @@ const NOW = "2099-07-17T12:00:00.000Z";
 const CONTEXT = "https://www.w3.org/ns/activitystreams";
 const LEADER = "urn:leader:emsenn";
 const LMT = "urn:ame:leader-movement-team";
+// LMT forms a Leader-charge before it will run any leader-addressed activity through
+// run-leader-movement.js. Absence of a hired die is that die's own lawful refusal
+// (see leader-charge-client.mjs); these tests carry that absence as a typed skip
+// rather than asserting against a Reject the fixture cannot lawfully avoid.
+const LEADER_CHARGE_GRANTED = typeof process.env.LEADER_CHARGE_AGENT === "string" && process.env.LEADER_CHARGE_AGENT.length > 0;
+const LEADER_CHARGE_MISSING_REASON = "no hired Leader-charge die: LEADER_CHARGE_AGENT must name the hired Leader-charge die's signed A2A 1.0 Agent Card";
+const skipWithoutLeaderCharge = LEADER_CHARGE_GRANTED ? {} : { skip: LEADER_CHARGE_MISSING_REASON };
 
 let rwil; let base; let fixtureRoot; let lmtRoot; let dataRoot;
 test.before(async () => { rwil = await startRwilProviderProcess(); });
@@ -61,14 +68,14 @@ test("advertises terms rather than silently inferring an unbounded filesystem sw
   const output = JSON.parse(execution.stdout); assert.equal(output.type, "Question"); assert.ok(output.object.missing.includes("terms(2..160 character strings)"));
 });
 
-test("LMT discovers CMT but cannot invoke filesystem recovery without a Leader grant", () => {
+test("LMT discovers CMT but cannot invoke filesystem recovery without a Leader grant", skipWithoutLeaderCharge, () => {
   const execution = runLeader(activity("grant-required", false));
   assert.equal(execution.status, 0, execution.stderr || execution.stdout);
   const output = JSON.parse(execution.stdout); assert.equal(output.type, "Question"); assert.equal(output.object.type, "ResourceGrantRequired");
   assert.deepEqual(output.object.offers[0].effects, ["filesystem-read"]);
 });
 
-test("LMT contracts a bounded recovery and receives source-bound context plus explicit gaps", () => {
+test("LMT contracts a bounded recovery and receives source-bound context plus explicit gaps", skipWithoutLeaderCharge, () => {
   const sourcePath = join(fixtureRoot, "current", "koios-runtime.md"); const before = readFileSync(sourcePath);
   const execution = runLeader(activity("recover"));
   assert.equal(execution.status, 0, execution.stderr || execution.stdout);
@@ -83,7 +90,7 @@ test("LMT contracts a bounded recovery and receives source-bound context plus ex
   assert.equal(readSettlementRecords(dataRoot, `${PRIOR_RESEARCH_CONTRACT}.recoveries`).length, 1);
 });
 
-test("candidate limits become a gap rather than a silent loss", () => {
+test("candidate limits become a gap rather than a silent loss", skipWithoutLeaderCharge, () => {
   writeFileSync(join(fixtureRoot, "current", "koios-second.md"), "Koios second source.\n");
   const execution = runLeader(activity("truncation", true, { terms: ["Koios"], maxFiles: 1, maxBytesPerFile: 1000 }));
   assert.equal(execution.status, 0, execution.stderr || execution.stdout);
@@ -91,7 +98,7 @@ test("candidate limits become a gap rather than a silent loss", () => {
   assert.ok(result.gapBundle.gaps.some((gap) => gap.type === "candidate-truncation" && gap.omitted >= 1));
 });
 
-test("a term that exists only beyond the cap is distinguished from an absent term", () => {
+test("a term that exists only beyond the cap is distinguished from an absent term", skipWithoutLeaderCharge, () => {
   writeFileSync(join(fixtureRoot, "current", "rare.md"), "A rare theorem has one witness.\n");
   const execution = runLeader(activity("term-cap", true, { terms: ["Koios", "rare theorem", "absent theorem"], maxFiles: 1, maxBytesPerFile: 1000 }));
   assert.equal(execution.status, 0, execution.stderr || execution.stdout);
@@ -100,7 +107,7 @@ test("a term that exists only beyond the cap is distinguished from an absent ter
   assert.ok(gaps.some((gap) => gap.type === "unmatched-term" && gap.term === "absent theorem"));
 });
 
-test("projects one existing recovery into a bounded issue packet without rereading source territory", () => {
+test("projects one existing recovery into a bounded issue packet without rereading source territory", skipWithoutLeaderCharge, () => {
   const sourcePath = join(fixtureRoot, "current", "koios-runtime.md");
   const recoveryExecution = runLeader(activity("projection-source", true, { maxBytesPerFile: 1000 }));
   assert.equal(recoveryExecution.status, 0, recoveryExecution.stderr || recoveryExecution.stdout);
