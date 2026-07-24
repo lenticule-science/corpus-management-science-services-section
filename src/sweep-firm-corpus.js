@@ -9,6 +9,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve, relative, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { analyzeForms } from "./lib/knowledge-forms.mjs";
+import { computeCoverNerve } from "../../../../../../../../561-group/services/lenticule-science/services/obsmetrological-services-section/services/mathematical-readout-exchange/src/server.mjs";
 import { createSettlementStore, readSettlementRecords } from "@emsenn/rwil-rdf-services/client";
 import { semanticId } from "@emsenn/rmn-semantic-conformance";
 import { encodeRelationalValue } from "@emsenn/rmn-semantic-conformance/relational-value";
@@ -213,7 +214,41 @@ function group(files, root) {
   return bySlug;
 }
 
-function judge() { return { mode: "unresolved", outcome: { positiveEvidence: false, negativeEvidence: false }, canonical: null, distinct: null, note: "a shared name is not evidence of semantic identity" }; }
+// Identity stays unsettled — a shared name is not evidence of semantic
+// identity — but the collision's coordination structure is measured rather
+// than shrugged at: how many directories the shared name bridges, and how
+// many pairwise overlaps that contributes to the sweep's cover nerve.
+function judge(peers) {
+  const directories = [...new Set(peers.map((peer) => dirname(peer)))];
+  return { mode: "unresolved", outcome: { positiveEvidence: false, negativeEvidence: false }, canonical: null, distinct: null,
+    coordination: { directories: directories.length, bridgingPairs: (directories.length * (directories.length - 1)) / 2 },
+    note: "a shared name is not evidence of semantic identity" };
+}
+
+// The sweep's shared-name groups form a cover of the swept directories: each
+// slug group is a patch over every directory holding one of its peers. The
+// cover nerve prices that structure — h0rank counts independent clusters,
+// h1rank counts the coordination cycles any consolidation would have to
+// erase, landauerBits prices that erasure — computed by the cover-nerve
+// readout seated at the mathematical-readout-exchange die.
+function coordinationReadout(groupSummaries) {
+  const directories = new Set();
+  const edges = new Set();
+  for (const group of groupSummaries) {
+    const spanned = [...new Set(group.peers.map((peer) => dirname(peer)))];
+    for (const dir of spanned) directories.add(dir);
+    for (let i = 0; i < spanned.length; i += 1) {
+      for (let j = i + 1; j < spanned.length; j += 1) {
+        edges.add(spanned[i] < spanned[j] ? `${spanned[i]} ${spanned[j]}` : `${spanned[j]} ${spanned[i]}`);
+      }
+    }
+  }
+  const parent = new Map([...directories].map((dir) => [dir, dir]));
+  const find = (x) => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
+  for (const edge of edges) { const [a, b] = edge.split(" "); const ra = find(a); const rb = find(b); if (ra !== rb) parent.set(ra, rb); }
+  const components = new Set([...directories].map(find)).size;
+  return computeCoverNerve({ entities: directories.size, cells: edges.size, components });
+}
 
 function assembleForms(bySlug, root) {
   const forms = [];
@@ -221,7 +256,7 @@ function assembleForms(bySlug, root) {
   for (const [slug, peers] of bySlug) {
     const ambiguous = peers.length > 1;
     let verdict = null;
-    if (ambiguous) verdict = judge();
+    if (ambiguous) verdict = judge(peers);
     groupSummaries.push({ slug, peers, ambiguous, verdict });
     for (const peer of peers) {
       forms.push({
@@ -235,7 +270,7 @@ function assembleForms(bySlug, root) {
   return { forms, groupSummaries };
 }
 
-async function witnessSweep(instant, result) { const provider = createSettlementStore({ settlementRoot: NODE_ROOT, dataRoot: resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data")), agentUrl: process.env.RWIL_RDF_AGENT }); await provider.record({ category: `${CORPUS_KNOWLEDGE_CONTRACT}.sweeps`, recordedAt: instant, record: { type: "FirmCorpusSweepWitness", law: CORPUS_KNOWLEDGE_CONTRACT, time: instant, root: result.root, terms: result.terms, fileCount: result.fileCount, ambiguousGroups: result.ambiguousGroups, material: result.material.materialId, territoryRecognition: result.territoryRecognition.proposalId, formationLeadCandidate: result.formationLeadCandidate.candidateId, inferenceMode: result.inference.mode } }); }
+async function witnessSweep(instant, result) { const provider = createSettlementStore({ settlementRoot: NODE_ROOT, dataRoot: resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data")), agentUrl: process.env.RWIL_RDF_AGENT }); await provider.record({ category: `${CORPUS_KNOWLEDGE_CONTRACT}.sweeps`, recordedAt: instant, record: { type: "FirmCorpusSweepWitness", law: CORPUS_KNOWLEDGE_CONTRACT, time: instant, root: result.root, terms: result.terms, fileCount: result.fileCount, ambiguousGroups: result.ambiguousGroups, coordination: result.coordination, material: result.material.materialId, territoryRecognition: result.territoryRecognition.proposalId, formationLeadCandidate: result.formationLeadCandidate.candidateId, inferenceMode: result.inference.mode } }); }
 
 async function witnessTerritories(instant, result) {
   const dataRoot = resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data"));
@@ -287,6 +322,7 @@ if (!root || !existsSync(root) || !statSync(root).isDirectory()) {
   const { forms, groupSummaries } = assembleForms(bySlug, resolve(root));
   const issues = analyzeForms(forms);
   const ambiguousGroups = groupSummaries.filter((g) => g.ambiguous).length;
+  const coordination = coordinationReadout(groupSummaries);
   const material = observedMaterial(resolve(root), files);
   const territoryRecognition = recognizeTerritory(resolve(root), material, terms);
   const lead = formationLeadCandidate(territoryRecognition, instant);
@@ -301,6 +337,7 @@ if (!root || !existsSync(root) || !statSync(root).isDirectory()) {
     droppedCount,
     groupCount: groupSummaries.length,
     ambiguousGroups,
+    coordination,
     inference: { mode: "not-performed", reason: "model output cannot settle a corpus identity claim" },
     material,
     territoryRecognition,
