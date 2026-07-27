@@ -9,7 +9,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve, relative, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { analyzeForms } from "./lib/knowledge-forms.mjs";
-import { computeCoverNerve } from "../../../../../../../../561-group/services/lenticule-science/services/obsmetrological-services-section/services/mathematical-readout-exchange/src/server.mjs";
+import { requestCoordinationReadout } from "./lib/coordination-readout.mjs";
 import { createSettlementStore, readSettlementRecords } from "@emsenn/rwil-rdf-services/client";
 import { semanticId } from "@emsenn/rmn-semantic-conformance";
 import { encodeRelationalValue } from "@emsenn/rmn-semantic-conformance/relational-value";
@@ -231,25 +231,6 @@ function judge(peers) {
 // h1rank counts the coordination cycles any consolidation would have to
 // erase, landauerBits prices that erasure — computed by the cover-nerve
 // readout seated at the mathematical-readout-exchange die.
-function coordinationReadout(groupSummaries) {
-  const directories = new Set();
-  const edges = new Set();
-  for (const group of groupSummaries) {
-    const spanned = [...new Set(group.peers.map((peer) => dirname(peer)))];
-    for (const dir of spanned) directories.add(dir);
-    for (let i = 0; i < spanned.length; i += 1) {
-      for (let j = i + 1; j < spanned.length; j += 1) {
-        edges.add(spanned[i] < spanned[j] ? `${spanned[i]} ${spanned[j]}` : `${spanned[j]} ${spanned[i]}`);
-      }
-    }
-  }
-  const parent = new Map([...directories].map((dir) => [dir, dir]));
-  const find = (x) => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
-  for (const edge of edges) { const [a, b] = edge.split(" "); const ra = find(a); const rb = find(b); if (ra !== rb) parent.set(ra, rb); }
-  const components = new Set([...directories].map(find)).size;
-  return computeCoverNerve({ entities: directories.size, cells: edges.size, components });
-}
-
 function assembleForms(bySlug, root) {
   const forms = [];
   const groupSummaries = [];
@@ -322,7 +303,7 @@ if (!root || !existsSync(root) || !statSync(root).isDirectory()) {
   const { forms, groupSummaries } = assembleForms(bySlug, resolve(root));
   const issues = analyzeForms(forms);
   const ambiguousGroups = groupSummaries.filter((g) => g.ambiguous).length;
-  const coordination = coordinationReadout(groupSummaries);
+  const coordination = await requestCoordinationReadout(groupSummaries);
   const material = observedMaterial(resolve(root), files);
   const territoryRecognition = recognizeTerritory(resolve(root), material, terms);
   const lead = formationLeadCandidate(territoryRecognition, instant);

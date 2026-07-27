@@ -30,8 +30,8 @@ function fixture() {
   return dir;
 }
 
-function run(extraArgs) {
-  return spawnSync(process.execPath, [CLI, "--now", NOW, ...extraArgs], { encoding: "utf8", env: { ...process.env, RWIL_RDF_AGENT: rwil.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot } });
+function run(extraArgs, environment = {}) {
+  return spawnSync(process.execPath, [CLI, "--now", NOW, ...extraArgs], { encoding: "utf8", env: { ...process.env, RWIL_RDF_AGENT: rwil.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot, ...environment } });
 }
 
 test("refuses a missing --root", () => {
@@ -99,6 +99,18 @@ test("leaves an ambiguous name-match at FOUR-bottom without invoking a model", (
     const output = JSON.parse(result.stdout);
     assert.equal(output.fileCount, 2);
     assert.equal(output.ambiguousGroups, 1);
+    assert.deepEqual(
+      {
+        h0rank: output.coordination.h0rank,
+        h1rank: output.coordination.h1rank,
+        coordinationFree: output.coordination.coordinationFree,
+        landauerBits: output.coordination.landauerBits,
+        coordinationCost: output.coordination.coordinationCost,
+      },
+      { h0rank: 1, h1rank: 0, coordinationFree: true, landauerBits: 0, coordinationCost: 0 },
+    );
+    assert.match(output.coordination.request, /^ni:\/\/\/sha-256;/u);
+    assert.match(output.coordination.result, /^ni:\/\/\/sha-256;/u);
     assert.equal(output.inference.mode, "not-performed");
     const widgetGroup = output.groups.find((g) => g.slug === "widget");
     assert.equal(widgetGroup.verdict.mode, "unresolved");
@@ -107,6 +119,21 @@ test("leaves an ambiguous name-match at FOUR-bottom without invoking a model", (
     for (const form of output.forms.filter((f) => f.provenance.slug === "widget")) {
       assert.deepEqual(form.claims, []);
     }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("fails closed when the contracted mathematical readout provider is unavailable", () => {
+  const dir = fixture();
+  try {
+    const result = run(
+      ["--root", dir, "--term", "widget"],
+      { CORPUS_MATHEMATICAL_READOUT_AGENT_URL: "http://127.0.0.1:1/.well-known/agent-card.json" },
+    );
+    assert.notEqual(result.status, 0);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /fetch failed|ECONNREFUSED/u);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
