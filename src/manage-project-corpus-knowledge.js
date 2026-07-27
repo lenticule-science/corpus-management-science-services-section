@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CORPUS_KNOWLEDGE_CONTRACT, PROJECT_CORPUS_SEAM_CONTRACT } from "./law.mjs";
 import Ajv2020 from "ajv/dist/2020.js";
-import { createSettlementStore } from "@emsenn/rwil-rdf-services/client";
+import { createSettlementStore } from "@lenticule-science/rwil-rdf-projection-service/client";
 import { canonical, digest, contentId, analyzeForms } from "./lib/knowledge-forms.mjs";
 
 const NODE_ID = "corpus-management-team";
@@ -29,7 +29,7 @@ function inputValue() {
   return JSON.parse(path ? readFileSync(resolve(path), "utf8") : readFileSync(0, "utf8"));
 }
 
-function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, dataRoot: resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data")), agentUrl: process.env.RWIL_RDF_AGENT }); }
+function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.RWIL_RDF_AGENT }); }
 async function witness(activity, outcome, instant, stageIds = []) {
   const provider = store();
   const activityDigest = digest(activity);

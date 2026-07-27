@@ -5,8 +5,8 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import test from "node:test";
-import { readSettlementRecords } from "@emsenn/rwil-rdf-services/client";
-import { startRwilProviderProcess } from "@emsenn/rwil-rdf-services/test-provider";
+import { querySettlementRecords } from "@lenticule-science/rwil-rdf-projection-service/client";
+import { startRwilProviderProcess } from "@lenticule-science/rwil-rdf-projection-service/test-provider";
 import { CORPUS_KNOWLEDGE_CONTRACT } from "../src/law.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -168,11 +168,11 @@ test("respects --max-files and reports what it dropped rather than truncating si
   }
 });
 
-test("witnesses the sweep through the account-bound RWIL provider", () => {
+test("witnesses the sweep through the account-bound RWIL provider", async () => {
   const dir = fixture();
   try {
     run(["--root", dir, "--term", "widget"]);
-    const records = readSettlementRecords(dataRoot, `${CORPUS_KNOWLEDGE_CONTRACT}.sweeps`);
+    const records = await querySettlementRecords(`${CORPUS_KNOWLEDGE_CONTRACT}.sweeps`);
     assert.equal(records.length, 1);
     assert.equal(records[0].ambiguousGroups, 1);
     assert.match(records[0].territoryRecognition, /^ni:\/\/\/sha-256;/u);

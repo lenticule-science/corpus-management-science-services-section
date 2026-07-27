@@ -1,5 +1,5 @@
 {
-  "name": "@emsenn/corpus-management-team",
+  "name": "@harmonious-union/corpus-management-team",
   "version": "0.2.0",
   "private": true,
   "type": "module",
@@ -13,12 +13,25 @@
     "check": "node --check src/law.mjs && node --check src/manage-project-corpus-knowledge.js && node --check src/sweep-firm-corpus.js && node --check src/contract-prior-research-recovery.js && node --check src/lib/knowledge-forms.mjs && node --check src/lib/coordination-readout.mjs && node --check test/manage-project-corpus-knowledge.test.js && node --check test/sweep-firm-corpus.test.js && node --check test/coordination-readout.test.js && node --check test/contract-prior-research-recovery.test.js",
     "test": "node --test --test-concurrency=1 test/manage-project-corpus-knowledge.test.js test/sweep-firm-corpus.test.js test/coordination-readout.test.js test/contract-prior-research-recovery.test.js"
   },
-  "dependencies": {"ajv": "^8.20.0", "@emsenn/mathematical-readout-exchange": "file:../../../../../../../561-group/services/lenticule-science/services/obsmetrological-services-section/services/mathematical-readout-exchange", "@emsenn/rmn-semantic-conformance": "file:../../../../../../../561-group/services/red-cup-engineering/services/model-services-section/services/relational-model-services-section/services/relational-model-notation-services-section/services/rmn-conformance-service", "@emsenn/rwil-rdf-services": "file:../../../../../../../561-group/services/lenticule-science/services/obsmetrological-services-section/services/rwil-rdf-services"},
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "@lenticule-science/mathematical-readout-exchange": "0.2.0",
+    "@red-cup-engineering/rmn-semantic-conformance": "6.0.0",
+    "@lenticule-science/rwil-rdf-projection-service": "1.0.0"
+  },
   "x-agentic-metro-enterprise": {
     "node-id": "corpus-management-team",
     "actor": "urn:ame:corpus-management-team",
-    "owners": ["board-of-directors", "executive-office", "knowledge-services-section"],
-    "membrane": {"law": "lib/", "lasting-instances": "content/", "append-only-instances": "data/"},
+    "owners": [
+      "board-of-directors",
+      "executive-office",
+      "knowledge-services-section"
+    ],
+    "membrane": {
+      "law": "lib/",
+      "lasting-instances": "content/",
+      "append-only-instances": "data/"
+    },
     "admission": "a directly addressed ActivityStreams corpus-management Offer or an LMT-negotiated recovery contract with authority attenuated to explicit filesystem roots and terms",
     "refusal": "malformed wireforms, missing or changed recovery scope, absent read authority, corpus-digest mismatch, customer-territory mutation, and ungrounded Landauer pricing",
     "transport-status": "ActivityStreams value-level wireform implemented; ActivityPub server-to-server deployment is not claimed",
@@ -37,5 +50,25 @@
       }
     }
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "x-semiotic-voxel": {
+    "profile": "org.harmonious-union.semiotic-voxel.v1",
+    "owner": "harmonious-union",
+    "kind": "actor",
+    "actor": "urn:ame:corpus-management-team",
+    "operations": [
+      "invoke-service",
+      "solicit-service"
+    ],
+    "capabilities": [
+      {
+        "capability": "corpus-management-team",
+        "faces": [
+          "invoke-service",
+          "solicit-service"
+        ]
+      }
+    ],
+    "package": "@harmonious-union/corpus-management-team"
+  }
 }

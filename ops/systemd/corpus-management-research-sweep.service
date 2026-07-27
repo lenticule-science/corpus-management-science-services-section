@@ -1,7 +1,7 @@
 [Unit]
 Description=Corpus Management Team bounded Executive Office research sweep
-After=rwil-rdf-services.service
-Wants=rwil-rdf-services.service
+After=rwil-rdf-projection-service.service
+Wants=rwil-rdf-projection-service.service
 
 [Service]
 Type=oneshot

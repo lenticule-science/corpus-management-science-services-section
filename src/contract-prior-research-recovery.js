@@ -7,7 +7,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PRIOR_RESEARCH_CONTRACT } from "./law.mjs";
 import { canonical, contentId, digest } from "./lib/knowledge-forms.mjs";
-import { createSettlementStore, readSettlementRecords } from "@emsenn/rwil-rdf-services/client";
+import { createSettlementStore, querySettlementRecords } from "@lenticule-science/rwil-rdf-projection-service/client";
 
 const CONTEXT = "https://www.w3.org/ns/activitystreams";
 const NODE_ID = "corpus-management-team";
@@ -39,7 +39,7 @@ function emit(value, code = 0) {
   process.exitCode = code;
 }
 function dataRoot() { return resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data")); }
-function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, dataRoot: dataRoot(), agentUrl: process.env.RWIL_RDF_AGENT }); }
+function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.RWIL_RDF_AGENT }); }
 async function append(type, value, instant) { return store().record({ category: `${CONTRACT}.${type}`, recordedAt: instant, record: value }); }
 async function witness(activity, outcome, instant, details = {}) {
   const body = { source: ACTOR, type: `org.emsenn.${NODE_ID}.${outcome}`, subject: activity?.id ?? "urn:activity:unidentified", time: instant, data: { activityDigest: digest(activity ?? null), contract: CONTRACT, ...details } };
@@ -243,8 +243,8 @@ function recover(request, instant) {
   const resultBody = { type: "PriorResearchRecoveryResult", contract: CONTRACT, recoveredAt: instant, requestDigest: digest(request), contextualBundle, contextualBundleDigest: digest(contextualBundle), gapBundle, gapBundleDigest: digest(gapBundle), filesystemReads: sources.length, customerTerritoryMutation: false };
   return { id: contentId(resultBody), ...resultBody };
 }
-function recoveryById(request) {
-  for (const candidate of readSettlementRecords(dataRoot(), `${CONTRACT}.recoveries`)) {
+async function recoveryById(request) {
+  for (const candidate of await querySettlementRecords(`${CONTRACT}.recoveries`)) {
       if (candidate.id !== request.sourceResultId) continue;
       // This is the provider's own append-only recovery record. Its bundle
       // digests and content-addressed result ID were computed when the record

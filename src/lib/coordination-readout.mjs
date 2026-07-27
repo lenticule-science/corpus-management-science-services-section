@@ -1,5 +1,5 @@
 import { dirname } from "node:path";
-import { requestRelationalGraphReadout } from "@emsenn/mathematical-readout-exchange/client";
+import { requestRelationalGraphReadout } from "@lenticule-science/mathematical-readout-exchange/client";
 
 const compareText = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 

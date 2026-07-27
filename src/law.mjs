@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { compileRmlLaw } from "@emsenn/rmn-semantic-conformance/law";
+import { compileRmlLaw } from "@red-cup-engineering/rmn-semantic-conformance/law";
 
 const compile = (name) => compileRmlLaw(readFileSync(new URL(`../content/contracts/${name}.rml`, import.meta.url), "utf8"));
 export const CORPUS_KNOWLEDGE_LAW = compile("managing-project-corpus-knowledge");

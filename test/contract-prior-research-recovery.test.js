@@ -6,8 +6,8 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import test from "node:test";
-import { readSettlementRecords } from "@emsenn/rwil-rdf-services/client";
-import { startRwilProviderProcess } from "@emsenn/rwil-rdf-services/test-provider";
+import { querySettlementRecords } from "@lenticule-science/rwil-rdf-projection-service/client";
+import { startRwilProviderProcess } from "@lenticule-science/rwil-rdf-projection-service/test-provider";
 import { PRIOR_RESEARCH_CONTRACT } from "../src/law.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -75,7 +75,7 @@ test("LMT discovers CMT but cannot invoke filesystem recovery without a Leader g
   assert.deepEqual(output.object.offers[0].effects, ["filesystem-read"]);
 });
 
-test("LMT contracts a bounded recovery and receives source-bound context plus explicit gaps", skipWithoutLeaderCharge, () => {
+test("LMT contracts a bounded recovery and receives source-bound context plus explicit gaps", skipWithoutLeaderCharge, async () => {
   const sourcePath = join(fixtureRoot, "current", "koios-runtime.md"); const before = readFileSync(sourcePath);
   const execution = runLeader(activity("recover"));
   assert.equal(execution.status, 0, execution.stderr || execution.stdout);
@@ -87,7 +87,7 @@ test("LMT contracts a bounded recovery and receives source-bound context plus ex
   assert.equal(result.contextualBundle.sources.some((item) => item.path.includes("/.git/")), false);
   assert.ok(result.gapBundle.gaps.some((gap) => gap.type === "unmatched-term" && gap.term === "missing theorem"));
   assert.ok(result.gapBundle.gaps.some((gap) => gap.type === "excerpt-truncation" && gap.path === sourcePath));
-  assert.equal(readSettlementRecords(dataRoot, `${PRIOR_RESEARCH_CONTRACT}.recoveries`).length, 1);
+  assert.equal((await querySettlementRecords(`${PRIOR_RESEARCH_CONTRACT}.recoveries`)).length, 1);
 });
 
 test("candidate limits become a gap rather than a silent loss", skipWithoutLeaderCharge, () => {
@@ -107,7 +107,7 @@ test("a term that exists only beyond the cap is distinguished from an absent ter
   assert.ok(gaps.some((gap) => gap.type === "unmatched-term" && gap.term === "absent theorem"));
 });
 
-test("projects one existing recovery into a bounded issue packet without rereading source territory", skipWithoutLeaderCharge, () => {
+test("projects one existing recovery into a bounded issue packet without rereading source territory", skipWithoutLeaderCharge, async () => {
   const sourcePath = join(fixtureRoot, "current", "koios-runtime.md");
   const recoveryExecution = runLeader(activity("projection-source", true, { maxBytesPerFile: 1000 }));
   assert.equal(recoveryExecution.status, 0, recoveryExecution.stderr || recoveryExecution.stdout);
@@ -133,5 +133,5 @@ test("projects one existing recovery into a bounded issue packet without rereadi
   assert.equal(result.contextualBundle.sources[0].digest, original.digest);
   assert.match(result.contextualBundle.sources[0].snippets.map((snippet) => snippet.text).join("\n"), /source cycle/i);
   assert.ok(result.gapBundle.gaps.some((gap) => gap.type === "unmatched-term" && gap.term === "missing projection term"));
-  assert.equal(readSettlementRecords(dataRoot, `${PRIOR_RESEARCH_CONTRACT}.projections`).length, 1);
+  assert.equal((await querySettlementRecords(`${PRIOR_RESEARCH_CONTRACT}.projections`)).length, 1);
 });

@@ -5,9 +5,9 @@ import { dirname, join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { semanticId } from "@emsenn/rmn-semantic-conformance";
-import { readSettlementRecords, relationalRwilDocument } from "@emsenn/rwil-rdf-services/client";
-import { startRwilProviderProcess } from "@emsenn/rwil-rdf-services/test-provider";
+import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
+import { querySettlementRecords, relationalRwilDocument } from "@lenticule-science/rwil-rdf-projection-service/client";
+import { startRwilProviderProcess } from "@lenticule-science/rwil-rdf-projection-service/test-provider";
 import { CORPUS_KNOWLEDGE_CONTRACT, PROJECT_CORPUS_SEAM_CONTRACT } from "../src/law.mjs";
 import Ajv2020 from "ajv/dist/2020.js";
 
@@ -29,7 +29,7 @@ function fixture() {
 }
 function executionEnvironment() { return { ...process.env, RWIL_RDF_AGENT: rwil.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot }; }
 function run(input, script = CLI, extra = []) { return spawnSync(process.execPath, [script, "--now", NOW, ...extra], { input: JSON.stringify(input), encoding: "utf8", env: executionEnvironment() }); }
-function records(contract, kind) { return readSettlementRecords(dataRoot, `${contract}.${kind}`); }
+async function records(contract, kind) { return await querySettlementRecords(`${contract}.${kind}`); }
 
 test("admits an ActivityStreams offer, preserves the snapshot, and emits linked MAPE plus exact EAVT", () => {
   const input = fixture(), before = canonical(input);
