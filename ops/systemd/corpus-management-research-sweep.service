@@ -5,9 +5,9 @@ Wants=rwil-rdf-projection-service.service
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/emsenn/info/lib/emsenn/services/board-of-directors/services/executive-office/services/knowledge-services-section/services/corpus-management-team
+WorkingDirectory=/home/emsenn/info/lib/emsenn/services/561-group/services/board-of-directors/services/executive-office/services/knowledge-services-section/services/corpus-management-team
 Environment=RWIL_RDF_AGENT=http://127.0.0.1:19764/.well-known/agent-card.json
-ExecStart=/home/emsenn/.config/nvm/versions/node/v24.13.1/bin/node src/sweep-firm-corpus.js --root /home/emsenn/info/lib/emsenn/services/board-of-directors/lib/agency/characters/emsenn/content/documents/articles --term research --term proof --term cloud --max-files 200
+ExecStart=/home/emsenn/.config/nvm/versions/node/v24.13.1/bin/node src/sweep-firm-corpus.js --root /home/emsenn/info/lib/emsenn/services/561-group/services/board-of-directors/lib/agency/characters/emsenn/content/documents/articles --term research --term proof --term cloud --max-files 200
 # The RWIL witness is the authoritative output.  Do not duplicate every source
 # record into the journal on each recurring pulse; preserve failures there.
 StandardOutput=null
