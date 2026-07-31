@@ -16,59 +16,8 @@
   "dependencies": {
     "ajv": "^8.20.0",
     "@lenticule-science/mathematical-readout-exchange": "0.2.1",
-    "@red-cup-engineering/rmn-semantic-conformance": "6.0.0",
+    "@red-cup-engineering/rmn-semantic-conformance": "6.0.1",
     "@lenticule-science/rwil-rdf-projection-service": "1.0.2"
   },
-  "x-agentic-metro-enterprise": {
-    "node-id": "corpus-management-team",
-    "actor": "urn:ame:corpus-management-team",
-    "owners": [
-      "board-of-directors",
-      "executive-office",
-      "knowledge-services-section"
-    ],
-    "membrane": {
-      "law": "lib/",
-      "lasting-instances": "content/",
-      "append-only-instances": "data/"
-    },
-    "admission": "a directly addressed ActivityStreams corpus-management Offer or an LMT-negotiated recovery contract with authority attenuated to explicit filesystem roots and terms",
-    "refusal": "malformed wireforms, missing or changed recovery scope, absent read authority, corpus-digest mismatch, customer-territory mutation, and ungrounded Landauer pricing",
-    "transport-status": "ActivityStreams value-level wireform implemented; ActivityPub server-to-server deployment is not claimed",
-    "operation-catalog": {
-      "solicit-service": {
-        "contract": "ni:///sha-256;ugqKIc6VFzqzfbuJ6JNrMB4Gognt169Wm1ZC8cf3vj0",
-        "accepts": "ActivityStreams Offer<ServiceSolicitation>",
-        "returns": "ActivityStreams Offer<ExecutableServiceOffer>|Question|Reject",
-        "timeoutMs": 30000
-      },
-      "invoke-service": {
-        "contract": "ni:///sha-256;ugqKIc6VFzqzfbuJ6JNrMB4Gognt169Wm1ZC8cf3vj0",
-        "accepts": "ActivityStreams Accept<ServiceContract>",
-        "returns": "ActivityStreams Accept<PriorResearchRecoveryResult|PriorResearchProjectionResult>|Reject",
-        "timeoutMs": 120000
-      }
-    }
-  },
-  "license": "UNLICENSED",
-  "x-semiotic-voxel": {
-    "profile": "org.harmonious-union.semiotic-voxel.v1",
-    "owner": "harmonious-union",
-    "kind": "actor",
-    "actor": "urn:ame:corpus-management-team",
-    "operations": [
-      "invoke-service",
-      "solicit-service"
-    ],
-    "capabilities": [
-      {
-        "capability": "corpus-management-team",
-        "faces": [
-          "invoke-service",
-          "solicit-service"
-        ]
-      }
-    ],
-    "package": "@harmonious-union/corpus-management-team"
-  }
+  "license": "UNLICENSED"
 }
