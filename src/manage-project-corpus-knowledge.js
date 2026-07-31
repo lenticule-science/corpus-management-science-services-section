@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CORPUS_KNOWLEDGE_CONTRACT, PROJECT_CORPUS_SEAM_CONTRACT } from "./law.mjs";
 import Ajv2020 from "ajv/dist/2020.js";
-import { createSettlementStore } from "@lenticule-science/rwil-rdf-projection-service/client";
+import { createSettlementStore } from "@lenticule-science/witness-journal-rdf-projection-service/client";
 import { canonical, digest, contentId, analyzeForms } from "./lib/knowledge-forms.mjs";
 
 const NODE_ID = "corpus-management-team";

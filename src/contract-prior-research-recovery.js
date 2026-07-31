@@ -7,7 +7,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PRIOR_RESEARCH_CONTRACT } from "./law.mjs";
 import { canonical, contentId, digest } from "./lib/knowledge-forms.mjs";
-import { createSettlementStore, querySettlementRecords } from "@lenticule-science/rwil-rdf-projection-service/client";
+import { createSettlementStore, querySettlementRecords } from "@lenticule-science/witness-journal-rdf-projection-service/client";
 
 const CONTEXT = "https://www.w3.org/ns/activitystreams";
 const NODE_ID = "corpus-management-team";

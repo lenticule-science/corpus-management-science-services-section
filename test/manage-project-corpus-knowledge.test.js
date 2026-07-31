@@ -6,8 +6,8 @@ import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
-import { querySettlementRecords, relationalRwilDocument } from "@lenticule-science/rwil-rdf-projection-service/client";
-import { startRwilProviderProcess } from "@lenticule-science/rwil-rdf-projection-service/test-provider";
+import { querySettlementRecords, relationalRwilDocument } from "@lenticule-science/witness-journal-rdf-projection-service/client";
+import { startRwilProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
 import { CORPUS_KNOWLEDGE_CONTRACT, PROJECT_CORPUS_SEAM_CONTRACT } from "../src/law.mjs";
 import Ajv2020 from "ajv/dist/2020.js";
 

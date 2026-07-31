@@ -10,7 +10,7 @@ import { dirname, join, resolve, relative, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { analyzeForms } from "./lib/knowledge-forms.mjs";
 import { requestCoordinationReadout } from "./lib/coordination-readout.mjs";
-import { createSettlementStore, querySettlementRecords } from "@lenticule-science/rwil-rdf-projection-service/client";
+import { createSettlementStore, querySettlementRecords } from "@lenticule-science/witness-journal-rdf-projection-service/client";
 import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
 import { encodeRelationalValue } from "@red-cup-engineering/rmn-semantic-conformance/relational-value";
 import { CORPUS_KNOWLEDGE_CONTRACT } from "./law.mjs";

@@ -6,8 +6,8 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import test from "node:test";
-import { querySettlementRecords } from "@lenticule-science/rwil-rdf-projection-service/client";
-import { startRwilProviderProcess } from "@lenticule-science/rwil-rdf-projection-service/test-provider";
+import { querySettlementRecords } from "@lenticule-science/witness-journal-rdf-projection-service/client";
+import { startRwilProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
 import { PRIOR_RESEARCH_CONTRACT } from "../src/law.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
