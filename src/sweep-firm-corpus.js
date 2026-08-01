@@ -251,13 +251,13 @@ function assembleForms(bySlug, root) {
   return { forms, groupSummaries };
 }
 
-async function witnessSweep(instant, result) { const provider = createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.RWIL_RDF_AGENT }); await provider.record({ category: `${CORPUS_KNOWLEDGE_CONTRACT}.sweeps`, recordedAt: instant, record: { type: "FirmCorpusSweepWitness", law: CORPUS_KNOWLEDGE_CONTRACT, time: instant, root: result.root, terms: result.terms, fileCount: result.fileCount, ambiguousGroups: result.ambiguousGroups, coordination: result.coordination, material: result.material.materialId, territoryRecognition: result.territoryRecognition.proposalId, formationLeadCandidate: result.formationLeadCandidate.candidateId, inferenceMode: result.inference.mode } }); }
+async function witnessSweep(instant, result) { const provider = createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.WITNESS_JOURNAL_RDF_AGENT }); await provider.record({ category: `${CORPUS_KNOWLEDGE_CONTRACT}.sweeps`, recordedAt: instant, record: { type: "FirmCorpusSweepWitness", law: CORPUS_KNOWLEDGE_CONTRACT, time: instant, root: result.root, terms: result.terms, fileCount: result.fileCount, ambiguousGroups: result.ambiguousGroups, coordination: result.coordination, material: result.material.materialId, territoryRecognition: result.territoryRecognition.proposalId, formationLeadCandidate: result.formationLeadCandidate.candidateId, inferenceMode: result.inference.mode } }); }
 
 async function witnessTerritories(instant, result) {
   const dataRoot = resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data"));
   const category = `${CORPUS_KNOWLEDGE_CONTRACT}.territories`;
   const known = new Set((await querySettlementRecords(category)).map((record) => `${record.territory}\u0000${record.material?.materialId}`));
-  const provider = createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.RWIL_RDF_AGENT });
+  const provider = createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.WITNESS_JOURNAL_RDF_AGENT });
   let appended = 0;
   for (const territory of result.territories) {
     const key = `${territory.territory}\u0000${territory.material.materialId}`;

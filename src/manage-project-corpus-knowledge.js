@@ -29,7 +29,7 @@ function inputValue() {
   return JSON.parse(path ? readFileSync(resolve(path), "utf8") : readFileSync(0, "utf8"));
 }
 
-function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.RWIL_RDF_AGENT }); }
+function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.WITNESS_JOURNAL_RDF_AGENT }); }
 async function witness(activity, outcome, instant, stageIds = []) {
   const provider = store();
   const activityDigest = digest(activity);

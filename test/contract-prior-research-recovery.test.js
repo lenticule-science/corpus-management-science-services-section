@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import test from "node:test";
 import { querySettlementRecords } from "@lenticule-science/witness-journal-rdf-projection-service/client";
-import { startRwilProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
+import { startWitnessJournalProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
 import { PRIOR_RESEARCH_CONTRACT } from "../src/law.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -25,11 +25,11 @@ const LEADER_CHARGE_GRANTED = typeof process.env.LEADER_CHARGE_AGENT === "string
 const LEADER_CHARGE_MISSING_REASON = "no hired Leader-charge die: LEADER_CHARGE_AGENT must name the hired Leader-charge die's signed A2A 1.0 Agent Card";
 const skipWithoutLeaderCharge = LEADER_CHARGE_GRANTED ? {} : { skip: LEADER_CHARGE_MISSING_REASON };
 
-let rwil; let base; let fixtureRoot; let lmtRoot; let dataRoot;
-test.before(async () => { rwil = await startRwilProviderProcess(); });
-test.after(async () => { await rwil.close(); });
+let witnessJournal; let base; let fixtureRoot; let lmtRoot; let dataRoot;
+test.before(async () => { witnessJournal = await startWitnessJournalProviderProcess(); });
+test.after(async () => { await witnessJournal.close(); });
 test.beforeEach(() => {
-  base = mkdtempSync(join(tmpdir(), "cmt-recovery-contract-")); fixtureRoot = join(base, "territory"); lmtRoot = join(base, "leader-movement-team"); dataRoot = join(base, "provider-rwil");
+  base = mkdtempSync(join(tmpdir(), "cmt-recovery-contract-")); fixtureRoot = join(base, "territory"); lmtRoot = join(base, "leader-movement-team"); dataRoot = join(base, "provider-witness-journal");
   mkdirSync(join(fixtureRoot, "current"), { recursive: true }); mkdirSync(join(fixtureRoot, "assets", "legacy"), { recursive: true }); mkdirSync(join(fixtureRoot, ".git", "modules"), { recursive: true });
   writeFileSync(join(fixtureRoot, "package.json"), `${JSON.stringify({ name: "@fixture/territory", "x-agentic-metro-enterprise": { "node-id": "fixture-territory" } })}\n`);
   writeFileSync(join(fixtureRoot, "current", "koios-runtime.md"), "Koios News owns a source cycle.\nFresh Web evidence enters the newswire.\n");
@@ -39,7 +39,7 @@ test.beforeEach(() => {
 });
 test.afterEach(() => { rmSync(base, { recursive: true, force: true }); });
 
-function executionEnvironment() { return { ...process.env, RWIL_RDF_AGENT: rwil.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot }; }
+function executionEnvironment() { return { ...process.env, WITNESS_JOURNAL_RDF_AGENT: witnessJournal.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot }; }
 
 function activity(id, grant = true, overrides = {}) {
   const request = {

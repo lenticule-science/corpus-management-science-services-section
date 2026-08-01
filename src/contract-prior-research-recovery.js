@@ -39,7 +39,7 @@ function emit(value, code = 0) {
   process.exitCode = code;
 }
 function dataRoot() { return resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data")); }
-function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.RWIL_RDF_AGENT }); }
+function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.WITNESS_JOURNAL_RDF_AGENT }); }
 async function append(type, value, instant) { return store().record({ category: `${CONTRACT}.${type}`, recordedAt: instant, record: value }); }
 async function witness(activity, outcome, instant, details = {}) {
   const body = { source: ACTOR, type: `org.emsenn.${NODE_ID}.${outcome}`, subject: activity?.id ?? "urn:activity:unidentified", time: instant, data: { activityDigest: digest(activity ?? null), contract: CONTRACT, ...details } };

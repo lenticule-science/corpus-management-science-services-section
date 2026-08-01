@@ -8,4 +8,4 @@
   ("postcondition" "The contractor receives content-identified ContextualBundle and GapBundle values or a refusal; customer territory is unchanged and every admitted source remains digest-bound.")
   ("refusal" "Refuse missing or changed scope, absent read authority, unbounded search, source-identity loss, silent gaps, provider-result mutation, and customer writes.")
   ("protocol" "ActivityStreams-2.0")
-  ("evidence" "RWIL-RDF"))
+  ("evidence" "WITNESS-JOURNAL-RDF"))

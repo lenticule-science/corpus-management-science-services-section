@@ -1,9 +1,9 @@
 import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
-import { relationalRwilDocument } from "@lenticule-science/witness-journal-rdf-projection-service/client";
+import { relationalWitnessJournalDocument } from "@lenticule-science/witness-journal-rdf-projection-service/client";
 
-export function canonical(value) { return JSON.stringify(relationalRwilDocument(value)); }
+export function canonical(value) { return JSON.stringify(relationalWitnessJournalDocument(value)); }
 
-export function digest(value) { return semanticId(relationalRwilDocument(value)); }
+export function digest(value) { return semanticId(relationalWitnessJournalDocument(value)); }
 
 export function contentId(value) { return digest(value); }
 

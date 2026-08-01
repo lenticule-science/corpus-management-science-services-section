@@ -6,17 +6,17 @@ import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import test from "node:test";
 import { querySettlementRecords } from "@lenticule-science/witness-journal-rdf-projection-service/client";
-import { startRwilProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
+import { startWitnessJournalProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
 import { CORPUS_KNOWLEDGE_CONTRACT } from "../src/law.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "src/sweep-firm-corpus.js");
 const NOW = "2099-07-17T12:00:00.000Z";
 
-let rwil, dataRoot;
-test.before(async () => { rwil = await startRwilProviderProcess(); });
-test.after(async () => { await rwil.close(); });
-test.beforeEach(() => { dataRoot = mkdtempSync(join(tmpdir(), "corpus-sweep-rwil-")); });
+let witnessJournal, dataRoot;
+test.before(async () => { witnessJournal = await startWitnessJournalProviderProcess(); });
+test.after(async () => { await witnessJournal.close(); });
+test.beforeEach(() => { dataRoot = mkdtempSync(join(tmpdir(), "corpus-sweep-witness-journal-")); });
 test.afterEach(() => { rmSync(dataRoot, { recursive: true, force: true }); });
 
 function fixture() {
@@ -31,7 +31,7 @@ function fixture() {
 }
 
 function run(extraArgs, environment = {}) {
-  return spawnSync(process.execPath, [CLI, "--now", NOW, ...extraArgs], { encoding: "utf8", env: { ...process.env, RWIL_RDF_AGENT: rwil.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot, ...environment } });
+  return spawnSync(process.execPath, [CLI, "--now", NOW, ...extraArgs], { encoding: "utf8", env: { ...process.env, WITNESS_JOURNAL_RDF_AGENT: witnessJournal.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot, ...environment } });
 }
 
 test("refuses a missing --root", () => {
@@ -168,7 +168,7 @@ test("respects --max-files and reports what it dropped rather than truncating si
   }
 });
 
-test("witnesses the sweep through the account-bound RWIL provider", async () => {
+test("witnesses the sweep through the account-bound WitnessJournal provider", async () => {
   const dir = fixture();
   try {
     run(["--root", dir, "--term", "widget"]);

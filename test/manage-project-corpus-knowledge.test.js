@@ -6,8 +6,8 @@ import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
-import { querySettlementRecords, relationalRwilDocument } from "@lenticule-science/witness-journal-rdf-projection-service/client";
-import { startRwilProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
+import { querySettlementRecords, relationalWitnessJournalDocument } from "@lenticule-science/witness-journal-rdf-projection-service/client";
+import { startWitnessJournalProviderProcess } from "@lenticule-science/witness-journal-rdf-projection-service/test-provider";
 import { CORPUS_KNOWLEDGE_CONTRACT, PROJECT_CORPUS_SEAM_CONTRACT } from "../src/law.mjs";
 import Ajv2020 from "ajv/dist/2020.js";
 
@@ -15,19 +15,19 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "src/manage-project-corpus-knowledge.js");
 const WRAPPER = join(ROOT, "lib/management/skills/managing-project-corpus-knowledge/scripts/manage-project-corpus-knowledge.js");
 const NOW = "2099-07-17T12:00:00.000Z";
-let rwil, dataRoot;
-test.before(async () => { rwil = await startRwilProviderProcess(); });
-test.after(async () => { await rwil.close(); });
-test.beforeEach(() => { dataRoot = mkdtempSync(join(tmpdir(), "corpus-management-rwil-")); });
+let witnessJournal, dataRoot;
+test.before(async () => { witnessJournal = await startWitnessJournalProviderProcess(); });
+test.after(async () => { await witnessJournal.close(); });
+test.beforeEach(() => { dataRoot = mkdtempSync(join(tmpdir(), "corpus-management-witness-journal-")); });
 test.afterEach(() => { rmSync(dataRoot, { recursive: true, force: true }); });
-function canonical(v) { return JSON.stringify(relationalRwilDocument(v)); }
-function digest(v) { return semanticId(relationalRwilDocument(v)); }
+function canonical(v) { return JSON.stringify(relationalWitnessJournalDocument(v)); }
+function digest(v) { return semanticId(relationalWitnessJournalDocument(v)); }
 function fixture() {
   const forms = [{ id: "task-a", type: "Task", schema: "urn:schema:project-task", provenance: { source: "urn:customer:alpha" }, goal: [{ type: "form-exists", form: "artifact-a" }], dependsOn: [] }];
   const corpusDigest = digest(forms);
   return { "@context": "https://www.w3.org/ns/activitystreams", id: "urn:activity:cmt-offer-1", type: "Offer", actor: "urn:ame:project-management-team", target: "urn:ame:corpus-management-team", object: { type: "ManageProjectCorpusKnowledge", contract: PROJECT_CORPUS_SEAM_CONTRACT, project: "urn:project:alpha", corpus: { digest: corpusDigest, forms }, capability: { id: "urn:cap:cmt-1", type: "Capability", issuer: "urn:ame:project-management-team", holder: "urn:ame:corpus-management-team", invocationTarget: "urn:ame:corpus-management-team", allowedActions: ["observe-corpus", "analyze-knowledge-forms", "emit-advice"], attenuation: { corpusDigest, customerTerritoryMutation: false, localEffects: ["append-own-ledger", "emit-activitystreams"] }, capTP: { target: "urn:ame:corpus-management-team", method: "manageProjectCorpusKnowledge" } } } };
 }
-function executionEnvironment() { return { ...process.env, RWIL_RDF_AGENT: rwil.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot }; }
+function executionEnvironment() { return { ...process.env, WITNESS_JOURNAL_RDF_AGENT: witnessJournal.agentCardUrl, CORPUS_MANAGEMENT_DATA_ROOT: dataRoot }; }
 function run(input, script = CLI, extra = []) { return spawnSync(process.execPath, [script, "--now", NOW, ...extra], { input: JSON.stringify(input), encoding: "utf8", env: executionEnvironment() }); }
 async function records(contract, kind) { return await querySettlementRecords(`${contract}.${kind}`); }
 
@@ -82,7 +82,7 @@ test("an outsider contracts the CMT directly under its public service contract",
   assert.equal(output.object.contract, CORPUS_KNOWLEDGE_CONTRACT);
 });
 
-test("concurrent replay yields one semantic RWIL record set", async () => {
+test("concurrent replay yields one semantic WitnessJournal record set", async () => {
   const encoded = JSON.stringify(fixture()), count = 8;
   await Promise.all(Array.from({ length: count }, () => new Promise((ok, fail) => {
     const child = spawn(process.execPath, [CLI, "--now", NOW], { stdio: ["pipe", "ignore", "pipe"], env: executionEnvironment() }); let error = "";

@@ -1,6 +1,6 @@
 {
   "name": "@harmonious-union/corpus-management-team",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "description": "A directly contractable micro-enterprise that recovers source-bound prior research and analyzes immutable project-corpus snapshots.",
@@ -15,9 +15,9 @@
   },
   "dependencies": {
     "ajv": "^8.20.0",
-    "@lenticule-science/mathematical-readout-exchange": "0.2.1",
-    "@red-cup-engineering/rmn-semantic-conformance": "6.0.1",
-    "@lenticule-science/witness-journal-rdf-projection-service": "1.0.2"
+    "@lenticule-science/mathematical-readout-exchange": "0.2.2",
+    "@red-cup-engineering/rmn-semantic-conformance": "6.0.2",
+    "@lenticule-science/witness-journal-rdf-projection-service": "1.0.3"
   },
   "license": "UNLICENSED"
 }
