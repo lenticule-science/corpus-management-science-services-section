@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { createHash } from "node:crypto";
+import { rawNiUri } from "@red-cup-engineering/rmn-semantic-conformance-die/canonical-cbor";
 import { spawnSync } from "node:child_process";
 import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
@@ -194,7 +194,7 @@ function statusOf(path) {
   if (normalized.includes("/experimental.")) return "experimental";
   return "current";
 }
-function fileDigest(bytes) { return `ni:///sha-256;${createHash("sha256").update(bytes).digest("base64url")}`; }
+const fileDigest = rawNiUri;
 function sourceRecord(path, indexedTerms, request, ownerCache) {
   const bytes = readFileSync(path); const text = bytes.subarray(0, request.maxBytesPerFile).toString("utf8");
   const lines = text.split(/\r?\n/u); const terms = request.terms.map((term) => [term, term.toLowerCase()]);
