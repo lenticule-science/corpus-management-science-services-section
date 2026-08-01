@@ -10,7 +10,7 @@
     "invoke-service": "./src/contract-prior-research-recovery.js"
   },
   "scripts": {
-    "check": "node --check src/law.mjs && node --check src/manage-project-corpus-knowledge.js && node --check src/sweep-firm-corpus.js && node --check src/contract-prior-research-recovery.js && node --check src/lib/knowledge-forms.mjs && node --check src/lib/coordination-readout.mjs && node --check test/manage-project-corpus-knowledge.test.js && node --check test/sweep-firm-corpus.test.js && node --check test/coordination-readout.test.js && node --check test/contract-prior-research-recovery.test.js",
+    "check": "node --check src/manage-project-corpus-knowledge.js && node --check src/sweep-firm-corpus.js && node --check src/contract-prior-research-recovery.js && node --check src/lib/knowledge-forms.mjs && node --check src/lib/coordination-readout.mjs && node --check test/manage-project-corpus-knowledge.test.js && node --check test/sweep-firm-corpus.test.js && node --check test/coordination-readout.test.js && node --check test/contract-prior-research-recovery.test.js",
     "test": "node --test --test-concurrency=1 test/manage-project-corpus-knowledge.test.js test/sweep-firm-corpus.test.js test/coordination-readout.test.js test/contract-prior-research-recovery.test.js"
   },
   "dependencies": {
