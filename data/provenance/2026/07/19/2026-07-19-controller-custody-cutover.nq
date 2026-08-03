@@ -1,4 +1,0 @@
-<urn:ame:corpus-management-team> <urn:emsenn:evm:retired-controller-artifact> <ni:///sha-256;KMtWNB-ILjGIiNRxJAj09t2d80SJBVeOsFbPlcMlqEo> <urn:ame:corpus-management-team:controller-custody-cutover:eip155-31337> .
-<ni:///sha-256;KMtWNB-ILjGIiNRxJAj09t2d80SJBVeOsFbPlcMlqEo> <urn:emsenn:evm:retired-path> "data/evm/controller-eip155-31337.env" <urn:ame:corpus-management-team:controller-custody-cutover:eip155-31337> .
-<urn:ame:corpus-management-team> <urn:emsenn:evm:controller-keystore-format> "Ethereum Secret Storage v3" <urn:ame:corpus-management-team:controller-custody-cutover:eip155-31337> .
-<urn:ame:corpus-management-team> <urn:emsenn:evm:controller-chain> <eip155:31337> <urn:ame:corpus-management-team:controller-custody-cutover:eip155-31337> .
