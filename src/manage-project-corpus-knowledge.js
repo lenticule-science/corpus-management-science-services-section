@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CORPUS_KNOWLEDGE_CONTRACT, PROJECT_CORPUS_SEAM_CONTRACT } from "./law.mjs";
 import Ajv2020 from "ajv/dist/2020.js";
-import { createSettlementStore } from "@lenticule-science/witness-journal-rdf-projection-service/client";
+import { createSemanticRecordJournal } from "@red-cup-engineering/semantic-record-journal-service";
 import { canonical, digest, contentId, analyzeForms } from "./lib/knowledge-forms.mjs";
 
 const NODE_ID = "corpus-management-team";
@@ -29,7 +29,10 @@ function inputValue() {
   return JSON.parse(path ? readFileSync(resolve(path), "utf8") : readFileSync(0, "utf8"));
 }
 
-function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.WITNESS_JOURNAL_RDF_AGENT }); }
+function store() {
+  const journal = createSemanticRecordJournal({ root: NODE_ROOT, objectKind: "corpus-management.record" });
+  return { record: ({ category, recordedAt, record }) => journal.record({ category, recordedAt, record, charge: { support: true, refutation: false }, ...(category.endsWith(".eavt") ? { relation: { subject: record.e, predicate: record.a, object: record.v } } : {}) }) };
+}
 async function witness(activity, outcome, instant, stageIds = []) {
   const provider = store();
   const activityDigest = digest(activity);

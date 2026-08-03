@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-import { rawNiUri } from "@red-cup-engineering/rmn-semantic-conformance-die/canonical-cbor";
+import { makeNiUri } from "@red-cup-engineering/ni-uri-services-section";
 import { spawnSync } from "node:child_process";
 import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PRIOR_RESEARCH_CONTRACT } from "./law.mjs";
 import { canonical, contentId, digest } from "./lib/knowledge-forms.mjs";
-import { createSettlementStore, querySettlementRecords } from "@lenticule-science/witness-journal-rdf-projection-service/client";
+import { createSemanticRecordJournal } from "@red-cup-engineering/semantic-record-journal-service";
 
 const CONTEXT = "https://www.w3.org/ns/activitystreams";
 const NODE_ID = "corpus-management-team";
@@ -39,8 +39,8 @@ function emit(value, code = 0) {
   process.exitCode = code;
 }
 function dataRoot() { return resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data")); }
-function store() { return createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.WITNESS_JOURNAL_RDF_AGENT }); }
-async function append(type, value, instant) { return store().record({ category: `${CONTRACT}.${type}`, recordedAt: instant, record: value }); }
+function store() { return createSemanticRecordJournal({ root: NODE_ROOT, objectKind: "corpus-management.record" }); }
+async function append(type, value, instant) { return store().record({ category: `${CONTRACT}.${type}`, recordedAt: instant, record: value, charge: { support: true, refutation: false }, ...(type === "eavt" ? { relation: { subject: value.e, predicate: value.a, object: value.v } } : {}) }); }
 async function witness(activity, outcome, instant, details = {}) {
   const body = { source: ACTOR, type: `org.emsenn.${NODE_ID}.${outcome}`, subject: activity?.id ?? "urn:activity:unidentified", time: instant, data: { activityDigest: digest(activity ?? null), contract: CONTRACT, ...details } };
   const event = { specversion: "1.0", id: contentId(body), ...body, datacontenttype: "application/json" };
@@ -194,7 +194,7 @@ function statusOf(path) {
   if (normalized.includes("/experimental.")) return "experimental";
   return "current";
 }
-const fileDigest = rawNiUri;
+const fileDigest = makeNiUri;
 function sourceRecord(path, indexedTerms, request, ownerCache) {
   const bytes = readFileSync(path); const text = bytes.subarray(0, request.maxBytesPerFile).toString("utf8");
   const lines = text.split(/\r?\n/u); const terms = request.terms.map((term) => [term, term.toLowerCase()]);
@@ -244,7 +244,7 @@ function recover(request, instant) {
   return { id: contentId(resultBody), ...resultBody };
 }
 async function recoveryById(request) {
-  for (const candidate of await querySettlementRecords(`${CONTRACT}.recoveries`)) {
+  for (const { record: candidate } of store().query({ category: `${CONTRACT}.recoveries` })) {
       if (candidate.id !== request.sourceResultId) continue;
       // This is the provider's own append-only recovery record. Its bundle
       // digests and content-addressed result ID were computed when the record

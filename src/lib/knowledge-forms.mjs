@@ -1,9 +1,9 @@
-import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
-import { relationalWitnessJournalDocument } from "@lenticule-science/witness-journal-rdf-projection-service/client";
+import { EMPTY_WITNESS_ROOT, identifyJsonSemanticContent } from "@red-cup-engineering/semantic-content-identify-service";
 
-export function canonical(value) { return JSON.stringify(relationalWitnessJournalDocument(value)); }
+const semantic = (value) => identifyJsonSemanticContent({ objectKind: "corpus-management.knowledge-form", value, witnessRoot: EMPTY_WITNESS_ROOT });
+export function canonical(value) { return semantic(value).bytes.toString("base64"); }
 
-export function digest(value) { return semanticId(relationalWitnessJournalDocument(value)); }
+export function digest(value) { return semantic(value).id; }
 
 export function contentId(value) { return digest(value); }
 

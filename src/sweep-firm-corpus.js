@@ -10,9 +10,8 @@ import { dirname, join, resolve, relative, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { analyzeForms } from "./lib/knowledge-forms.mjs";
 import { requestCoordinationReadout } from "./lib/coordination-readout.mjs";
-import { createSettlementStore, querySettlementRecords } from "@lenticule-science/witness-journal-rdf-projection-service/client";
-import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
-import { encodeRelationalValue } from "@red-cup-engineering/rmn-semantic-conformance/relational-value";
+import { createSemanticRecordJournal } from "@red-cup-engineering/semantic-record-journal-service";
+import { EMPTY_WITNESS_ROOT, identifyJsonSemanticContent } from "@red-cup-engineering/semantic-content-identify-service";
 import { CORPUS_KNOWLEDGE_CONTRACT } from "./law.mjs";
 
 const NODE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -59,8 +58,8 @@ function observedMaterial(root, files) {
     const stat = statSync(file);
     return Object.freeze({ path: relative(root, file), bytes: stat.size, sha256: sha256File(file) });
   });
-  const encoded = encodeRelationalValue({ type: "BoundedTerritoryMaterialSet", root, entries });
-  return Object.freeze({ type: "BoundedTerritoryMaterialSet", materialId: semanticId(["ascribe", encoded.type, encoded.term]), entries,
+  const body = { type: "BoundedTerritoryMaterialSet", root, entries };
+  return Object.freeze({ type: body.type, materialId: identifyJsonSemanticContent({ objectKind: "corpus-management.bounded-territory-material-set", value: body, witnessRoot: EMPTY_WITNESS_ROOT }).id, entries,
     totalBytes: entries.reduce((sum, entry) => sum + entry.bytes, 0) });
 }
 
@@ -158,8 +157,7 @@ function recognizeTerritory(root, material, terms) {
   if (!candidates.length) candidates.push({ kind: "unclassified-material", evidence: ["no recognized package, proof, document, or archive marker in bounded observation"], nextCapability: "territory-recognition-review" });
   const proposalBody = { type: "TerritoryRecognitionProposal", territory: root, material: material.materialId, markers, extensionCounts: counts,
     candidates, disposition: "advisory-proposal-only", enterpriseFormed: false, territoryMutated: false, providerSelected: false, spendAuthorized: false };
-  const encoded = encodeRelationalValue(proposalBody);
-  return Object.freeze({ proposalId: semanticId(["ascribe", encoded.type, encoded.term]), ...proposalBody });
+  return Object.freeze({ proposalId: identifyJsonSemanticContent({ objectKind: "corpus-management.territory-recognition-proposal", value: proposalBody, witnessRoot: EMPTY_WITNESS_ROOT }).id, ...proposalBody });
 }
 
 function formationLeadCandidate(recognition, instant) {
@@ -172,8 +170,7 @@ function formationLeadCandidate(recognition, instant) {
     formationProviderPreselected: false, customerMutation: false, spendAuthorized: false,
     nextBoundary: "treaty-mapped-activitypub-formation-lead-or-refusal",
   };
-  const encoded = encodeRelationalValue(body);
-  return Object.freeze({ candidateId: semanticId(["ascribe", encoded.type, encoded.term]), ...body });
+  return Object.freeze({ candidateId: identifyJsonSemanticContent({ objectKind: "corpus-management.formation-lead-candidate", value: body, witnessRoot: EMPTY_WITNESS_ROOT }).id, ...body });
 }
 
 function walk(root, terms, maxFiles) {
@@ -251,18 +248,18 @@ function assembleForms(bySlug, root) {
   return { forms, groupSummaries };
 }
 
-async function witnessSweep(instant, result) { const provider = createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.WITNESS_JOURNAL_RDF_AGENT }); await provider.record({ category: `${CORPUS_KNOWLEDGE_CONTRACT}.sweeps`, recordedAt: instant, record: { type: "FirmCorpusSweepWitness", law: CORPUS_KNOWLEDGE_CONTRACT, time: instant, root: result.root, terms: result.terms, fileCount: result.fileCount, ambiguousGroups: result.ambiguousGroups, coordination: result.coordination, material: result.material.materialId, territoryRecognition: result.territoryRecognition.proposalId, formationLeadCandidate: result.formationLeadCandidate.candidateId, inferenceMode: result.inference.mode } }); }
+async function witnessSweep(instant, result) { createSemanticRecordJournal({ root: NODE_ROOT, objectKind: "corpus-management.record" }).record({ category: `${CORPUS_KNOWLEDGE_CONTRACT}.sweeps`, recordedAt: instant, record: { type: "FirmCorpusSweepWitness", law: CORPUS_KNOWLEDGE_CONTRACT, time: instant, root: result.root, terms: result.terms, fileCount: result.fileCount, ambiguousGroups: result.ambiguousGroups, coordination: result.coordination, material: result.material.materialId, territoryRecognition: result.territoryRecognition.proposalId, formationLeadCandidate: result.formationLeadCandidate.candidateId, inferenceMode: result.inference.mode }, charge: { support: true, refutation: false } }); }
 
 async function witnessTerritories(instant, result) {
   const dataRoot = resolve(process.env.CORPUS_MANAGEMENT_DATA_ROOT ?? join(NODE_ROOT, "data"));
   const category = `${CORPUS_KNOWLEDGE_CONTRACT}.territories`;
-  const known = new Set((await querySettlementRecords(category)).map((record) => `${record.territory}\u0000${record.material?.materialId}`));
-  const provider = createSettlementStore({ settlementRoot: NODE_ROOT, agentUrl: process.env.WITNESS_JOURNAL_RDF_AGENT });
+  const provider = createSemanticRecordJournal({ root: NODE_ROOT, objectKind: "corpus-management.record" });
+  const known = new Set(provider.query({ category }).map(({ record }) => `${record.territory}\u0000${record.material?.materialId}`));
   let appended = 0;
   for (const territory of result.territories) {
     const key = `${territory.territory}\u0000${territory.material.materialId}`;
     if (known.has(key)) continue;
-    await provider.record({ category, recordedAt: instant, record: territory });
+    provider.record({ category, recordedAt: instant, record: territory, charge: { support: true, refutation: false } });
     known.add(key); appended += 1;
   }
   return appended;
