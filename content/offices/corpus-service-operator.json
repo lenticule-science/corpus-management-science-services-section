@@ -1,0 +1,12 @@
+{
+  "id": "corpus-service-operator",
+  "name": "corpus service operator",
+  "kind": "office",
+  "normative-structure": "The office answers for deriving knowledge-form observations diagnoses plans and advice from a contracted immutable project corpus while preserving contested claims.",
+  "deontic-profile": {"project-corpus-knowledge-management": "duty"},
+  "bears-duty": ["emsenn/duty/managing-project-corpus-knowledge"],
+  "provides-skill": ["managing-project-corpus-knowledge"],
+  "authority-scope": ["./"],
+  "jurisdiction": "corpus-management-team",
+  "theory-basis": ["MAPE-K stage separation", "FOUR-valued knowledge", "sheaf-style obstruction preservation", "ActivityStreams 2.0 boundary values"]
+}

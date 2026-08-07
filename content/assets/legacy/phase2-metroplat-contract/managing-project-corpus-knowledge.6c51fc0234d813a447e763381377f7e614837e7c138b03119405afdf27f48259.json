@@ -1,0 +1,22 @@
+{
+  "kind": "metroplat.contract",
+  "id": "managing-project-corpus-knowledge",
+  "material": {
+    "id": "project-corpus-knowledge-boundary",
+    "loci": ["activitystreams-offer", "knowledge-form", "identifier", "schema-address", "claim", "mape-stage", "corpus-management-result"],
+    "incidence": ["offer addresses corpus-management-team", "capability binds one supplied corpus digest", "knowledge forms meet at identifier schema and claim loci", "each MAPE stage names its predecessor"],
+    "fibers": ["customer-owned knowledge forms", "CMT-owned observations diagnoses plans advice and witnesses"],
+    "valueAlgebra": "FOUR-valued claims with unknown held denied and contested readings",
+    "section": "one knowledge-form MAPE result over one immutable supplied snapshot",
+    "constraints": ["direct bilateral admission", "attenuated executable authority", "no customer-territory mutation", "protected contradiction", "rank-leg pricing requires a contracted incidence-derived enterprise-observation receipt", "full-cocone pricing separately requires top mass mint jump causal and rank legs", "no physical kT ln 2 unit weld is claimed"],
+    "closure": ["monitor before analyze", "analyze before plan", "plan before execute", "every admitted stage is content-addressed"],
+    "boundary": ["ActivityStreams 2.0 Offer Accept Reject values", "CloudEvents 1.0 router notifications reference but do not wrap ActivityStreams activities", "node-local EAVT witness rows"]
+  },
+  "precondition": {"id": "direct-offer-with-attenuated-corpus-capability", "description": "Any direct contractor supplies an immutable corpus snapshot under the public service contract and a capability attenuated to observation analysis and advice; PMT may instead name its bilateral refinement.", "entails": ["customer-retains-territory"]},
+  "move": {"id": "derive-knowledge-form-mape", "description": "Derive observation, diagnosis, normalization plan, and advice without mutating the supplied corpus.", "domain": "one ActivityStreams corpus-management Offer", "codomain": "one ActivityStreams Accept or Reject", "partial": true, "deterministic": true, "effects": ["boundary", "evidence", "phase"]},
+  "postcondition": {"id": "knowledge-result-is-witnessed-and-non-invasive", "description": "The result is bound to the corpus digest and all differences remain explicit evidence.", "entails": ["no-customer-write"]},
+  "phase": {"id": "knowledge-mape-stage", "closureDepth": "finite", "finality": "stage", "recurrence": "history-dependent", "mobility": "fixed", "coherence": "partial", "contradiction": "hold", "coordinationCost": "evidenced", "observability": "boundary-only", "energy": "costed"},
+  "lens": {"id": "corpus-knowledge-service-boundary", "domain": "the supplied corpus snapshot", "boundary": "corpus-management-team membrane", "preserves": ["project identity", "snapshot digest", "identifiers", "schema addresses", "provenance", "contradiction witnesses"], "hides": ["customer interior", "PMT interior", "unrelated CMT ledger rows"], "output": "MAPE artifacts and normalization advice", "evidenceRequired": true},
+  "evidencePolicy": {"id": "knowledge-mape-witness", "required": true, "records": ["source Offer digest", "content-addressed MAPE stages", "node-local EAVT rows"], "time": "stage", "caller": "required", "boundaryObject": "fingerprint"},
+  "refinements": [{"id": "corpus-management-cli", "implementation": "src/manage-project-corpus-knowledge.js", "refines": "tool", "preserves": ["stage separation", "sovereign boundary", "local evidence", "explicit refusal"]}]
+}

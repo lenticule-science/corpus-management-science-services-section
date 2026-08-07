@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:emsenn:corpus-management-team:schema:evidence-wireforms",
+  "$defs": {
+    "cloudEventNotification": {"type": "object", "required": ["specversion", "id", "source", "type", "subject", "time", "datacontenttype", "data"], "additionalProperties": false, "properties": {"specversion": {"const": "1.0"}, "id": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"}, "source": {"const": "urn:ame:corpus-management-team"}, "type": {"type": "string", "pattern": "^org\\.emsenn\\.corpus-management-team\\.activity\\.(admitted|rejected)$"}, "subject": {"type": "string", "minLength": 1}, "time": {"type": "string", "format": "date-time"}, "datacontenttype": {"const": "application/json"}, "data": {"type": "object", "required": ["activityId", "activityDigest", "outcome", "contract", "stageIds", "note"], "additionalProperties": false, "properties": {"activityId": {"type": "string"}, "activityDigest": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"}, "outcome": {"enum": ["activity.admitted", "activity.rejected"]}, "contract": {"enum": ["ni:///sha-256;RuLwA6UH_Dp24oeqpRmEZNvOrVD4-YlT69krQzpW4cM", "ni:///sha-256;CLPW2dkvm4_g4pKK6eZ1yeSt_9Krwi_Xrp0xtl1RJZk"]}, "stageIds": {"type": "array", "items": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"}}, "note": {"type": "string", "minLength": 1}}}}},
+    "eavt": {"type": "object", "required": ["e", "a", "v", "t"], "additionalProperties": false, "properties": {"e": {"type": "string", "minLength": 1}, "a": {"enum": ["activity/digest", "activity/outcome", "contract/id", "mape/stage"]}, "v": {}, "t": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"}}}
+  }
+}

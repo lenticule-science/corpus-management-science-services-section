@@ -1,0 +1,12 @@
+{
+  "id": "project-management-team-hires-corpus-management-team",
+  "type": "BilateralServiceContract",
+  "parties": ["urn:ame:project-management-team", "urn:ame:corpus-management-team"],
+  "offer": "an ActivityStreams Offer carrying an immutable project-corpus snapshot and attenuated corpus-observation capability",
+  "acceptance": "an ActivityStreams Accept whose object is a CorpusManagementResult bound to the offered corpus digest",
+  "refusal": "an ActivityStreams Reject naming the failed precondition without mutating either party's territory",
+  "authority": {"delegated": ["observe-corpus", "analyze-knowledge-forms", "emit-advice"], "forbidden": ["mutate-customer-territory", "write-project-record", "delegate-beyond-caveats"]},
+  "wireforms": ["ActivityStreams-2.0", "OCap-attenuation-record", "CapTP-shaped-invocation-target"],
+  "transport-status": "value-level conformance only; ActivityPub S2S deployment awaits a settled did:web identity",
+  "settlement": "No x402 receipt is emitted. Rank-leg negotiation depends on a separately contracted incidence-derived enterprise-observation receipt; full-cocone and physical-unit welds remain separate capabilities."
+}

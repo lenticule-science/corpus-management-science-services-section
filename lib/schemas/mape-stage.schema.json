@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:emsenn:corpus-management-team:schema:mape-stage",
+  "type": "object",
+  "required": ["id", "type", "loopId", "stage", "predecessors", "knowledgeRefs", "evidence"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"},
+    "type": {"const": "MAPEStage"},
+    "loopId": {"type": "string"},
+    "stage": {"enum": ["monitor", "analyze", "plan", "execute"]},
+    "predecessors": {"type": "array", "maxItems": 1, "items": {"type": "string", "minLength": 1}},
+    "knowledgeRefs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "evidence": {"type": "object"}
+  },
+  "allOf": [{"if": {"properties": {"stage": {"const": "monitor"}}, "required": ["stage"]}, "then": {"properties": {"predecessors": {"maxItems": 0}}}, "else": {"properties": {"predecessors": {"minItems": 1, "maxItems": 1}}}}]
+}

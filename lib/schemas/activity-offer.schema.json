@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:emsenn:corpus-management-team:schema:activity-offer",
+  "type": "object",
+  "required": ["@context", "id", "type", "actor", "target", "object"],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {"const": "https://www.w3.org/ns/activitystreams"},
+    "id": {"type": "string", "minLength": 1},
+    "type": {"const": "Offer"},
+    "actor": {"type": "string", "minLength": 1},
+    "target": {"const": "urn:ame:corpus-management-team"},
+    "context": {"type": "string", "minLength": 1},
+    "object": {
+      "type": "object",
+      "required": ["type", "project", "corpus", "capability", "contract"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {"const": "ManageProjectCorpusKnowledge"},
+        "project": {"type": "string", "minLength": 1},
+        "contract": {"enum": ["ni:///sha-256;RuLwA6UH_Dp24oeqpRmEZNvOrVD4-YlT69krQzpW4cM", "ni:///sha-256;CLPW2dkvm4_g4pKK6eZ1yeSt_9Krwi_Xrp0xtl1RJZk"]},
+        "corpus": {"type": "object", "required": ["digest", "forms"], "additionalProperties": false, "properties": {"digest": {"$ref": "#/$defs/digest"}, "forms": {"type": "array", "items": {"$ref": "#/$defs/form"}}}},
+        "capability": {"$ref": "#/$defs/capability"},
+        "pricing": {"$ref": "#/$defs/pricing"}
+      }
+    }
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"},
+    "provenance": {"type": "object", "minProperties": 1},
+    "goalPredicate": {"oneOf": [
+      {"type": "object", "required": ["type", "form"], "additionalProperties": false, "properties": {"type": {"const": "form-exists"}, "form": {"type": "string", "minLength": 1}}},
+      {"type": "object", "required": ["type", "form", "digest"], "additionalProperties": false, "properties": {"type": {"const": "form-digest-equals"}, "form": {"type": "string", "minLength": 1}, "digest": {"$ref": "#/$defs/digest"}}}
+    ]},
+    "form": {"oneOf": [
+      {"type": "object", "required": ["id", "type", "schema", "provenance", "goal", "dependsOn"], "additionalProperties": false, "properties": {"id": {"type": "string", "minLength": 1}, "type": {"const": "Task"}, "schema": {"type": "string", "minLength": 1}, "provenance": {"$ref": "#/$defs/provenance"}, "goal": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/goalPredicate"}}, "dependsOn": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}, "inputRefs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}}},
+      {"type": "object", "required": ["id", "type", "schema", "provenance", "task", "contractor"], "additionalProperties": false, "properties": {"id": {"type": "string", "minLength": 1}, "type": {"const": "DispatchIntent"}, "schema": {"type": "string", "minLength": 1}, "provenance": {"$ref": "#/$defs/provenance"}, "task": {"type": "string", "minLength": 1}, "contractor": {"type": "string", "minLength": 1}}},
+      {"type": "object", "required": ["id", "type", "schema", "provenance", "task", "predicate", "observation"], "additionalProperties": false, "properties": {"id": {"type": "string", "minLength": 1}, "type": {"const": "GoalEvidence"}, "schema": {"type": "string", "minLength": 1}, "provenance": {"$ref": "#/$defs/provenance"}, "task": {"type": "string", "minLength": 1}, "predicate": {"$ref": "#/$defs/goalPredicate"}, "observation": {"type": "object"}}},
+      {"type": "object", "required": ["id", "type", "schema", "provenance", "payload"], "additionalProperties": false, "properties": {"id": {"type": "string", "minLength": 1}, "type": {"const": "ProjectArtifact"}, "schema": {"type": "string", "minLength": 1}, "provenance": {"$ref": "#/$defs/provenance"}, "payload": {}}}
+    ]},
+    "capability": {
+      "type": "object",
+      "required": ["id", "type", "issuer", "holder", "invocationTarget", "allowedActions", "attenuation", "capTP"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "type": {"const": "Capability"},
+        "parentCapability": {"type": "string", "minLength": 1},
+        "issuer": {"type": "string", "minLength": 1},
+        "holder": {"type": "string", "minLength": 1},
+        "invocationTarget": {"type": "string", "minLength": 1},
+        "allowedActions": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "attenuation": {"type": "object", "required": ["corpusDigest", "customerTerritoryMutation", "localEffects"], "additionalProperties": false, "properties": {"corpusDigest": {"$ref": "#/$defs/digest"}, "customerTerritoryMutation": {"const": false}, "localEffects": {"type": "array", "uniqueItems": true, "items": {"enum": ["append-own-ledger", "emit-activitystreams"]}}}},
+        "capTP": {"type": "object", "required": ["target", "method"], "additionalProperties": false, "properties": {"target": {"type": "string", "minLength": 1}, "method": {"type": "string", "minLength": 1}}}
+      }
+    },
+    "pricing": {"type": "object", "required": ["kind", "denomination"], "additionalProperties": false, "properties": {"kind": {"enum": ["rank-leg", "full-cocone", "physical-kTln2"]}, "denomination": {"const": "landauer-bit"}}}
+  }
+}

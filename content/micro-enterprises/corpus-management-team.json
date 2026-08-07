@@ -1,0 +1,11 @@
+{
+  "id": "corpus-management-team",
+  "name": "Corpus Management Team",
+  "kind": "node",
+  "faces": "project-management-team",
+  "internal-customer": "project-management-team",
+  "bundle": "project-corpus-knowledge-mape",
+  "package": "@harmonious-union/corpus-management-team",
+  "roster": "lib/management/roster.json",
+  "contracts": ["managing-project-corpus-knowledge", "project-management-team-hires-corpus-management-team", "recovering-prior-research"]
+}
