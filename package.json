@@ -19,5 +19,9 @@
     "@red-cup-engineering/semantic-record-journal-service": "0.1.0",
     "ajv": "^8.20.0"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lenticule-science/corpus-management-team.git"
+  }
 }
