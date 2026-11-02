@@ -1,4 +1,6 @@
-# corpus-management-team
+# @lenticule-science/corpus-management-science-services-section
+
+corpus-management-science-services-section is a services section of the 561 Group.
 
 ## Code
 
