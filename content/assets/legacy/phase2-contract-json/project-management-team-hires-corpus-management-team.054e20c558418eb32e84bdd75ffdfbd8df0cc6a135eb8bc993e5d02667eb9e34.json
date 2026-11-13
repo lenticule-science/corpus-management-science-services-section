@@ -1,7 +1,7 @@
 {
   "id": "project-management-team-hires-corpus-management-team",
   "type": "BilateralServiceContract",
-  "parties": ["urn:ame:project-management-team", "urn:ame:corpus-management-team"],
+  "parties": ["urn:ame:project-management-team", "urn:ame:corpus-management-science-services-section"],
   "offer": "an ActivityStreams Offer carrying an immutable project-corpus snapshot and attenuated corpus-observation capability",
   "acceptance": "an ActivityStreams Accept whose object is a CorpusManagementResult bound to the offered corpus digest",
   "refusal": "an ActivityStreams Reject naming the failed precondition without mutating either party's territory",

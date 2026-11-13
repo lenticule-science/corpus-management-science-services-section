@@ -1,7 +1,7 @@
 {
   "id": "obsmetrologia-enterprise-observation-coordination-measurement",
   "kind": "unfulfilled-capability-dependency",
-  "consumer": "corpus-management-team",
+  "consumer": "corpus-management-science-services-section",
   "intended-provider": "obsmetrologia",
   "intended-contract": "deriving-an-enterprise-cover-nerve-rank-leg",
   "capability": "derive a rank-leg receipt by recomputing cover incidence, cover nerve, H1rank, cycle rank, cells, edges, and connected components from admitted enterprise records",

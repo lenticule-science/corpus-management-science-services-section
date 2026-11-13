@@ -1,5 +1,5 @@
 {
-  "node": "corpus-management-team",
+  "node": "corpus-management-science-services-section",
   "offices": ["content/offices/corpus-service-operator.json"],
   "duties": ["content/duties/managing-project-corpus-knowledge.json"],
   "skills": ["lib/management/skills/managing-project-corpus-knowledge/skill.json"],

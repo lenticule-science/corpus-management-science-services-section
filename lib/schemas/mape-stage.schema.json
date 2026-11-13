@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:emsenn:corpus-management-team:schema:mape-stage",
+  "$id": "urn:emsenn:corpus-management-science-services-section:schema:mape-stage",
   "type": "object",
   "required": ["id", "type", "loopId", "stage", "predecessors", "knowledgeRefs", "evidence"],
   "additionalProperties": false,

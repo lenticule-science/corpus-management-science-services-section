@@ -1,7 +1,7 @@
 {
   "id": "corpus-management-team-value-ledger",
   "kind": "win-win-value-ledger",
-  "unit": "corpus-management-team",
+  "unit": "corpus-management-science-services-section",
   "entries": [],
   "rules": [
     "value created and value captured are separate",

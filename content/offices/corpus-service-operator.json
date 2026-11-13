@@ -7,6 +7,6 @@
   "bears-duty": ["emsenn/duty/managing-project-corpus-knowledge"],
   "provides-skill": ["managing-project-corpus-knowledge"],
   "authority-scope": ["./"],
-  "jurisdiction": "corpus-management-team",
+  "jurisdiction": "corpus-management-science-services-section",
   "theory-basis": ["MAPE-K stage separation", "FOUR-valued knowledge", "sheaf-style obstruction preservation", "ActivityStreams 2.0 boundary values"]
 }

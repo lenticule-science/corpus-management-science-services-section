@@ -1,6 +1,6 @@
 {
   "kind": "ownership-law-shadow",
-  "node": "corpus-management-team",
+  "node": "corpus-management-science-services-section",
   "owners": ["board-of-directors", "executive-office", "knowledge-services-section"],
   "effective-law": {
     "direct-contracting": true,

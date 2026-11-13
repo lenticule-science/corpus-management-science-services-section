@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:emsenn:corpus-management-team:schema:unfulfilled-capability-dependency",
+  "$id": "urn:emsenn:corpus-management-science-services-section:schema:unfulfilled-capability-dependency",
   "type": "object",
   "required": ["id", "kind", "consumer", "intended-provider", "intended-contract", "capability", "formal-basis", "state", "reason", "forbidden-substitutes"],
   "additionalProperties": false,
   "properties": {
     "id": {"const": "obsmetrologia-enterprise-observation-coordination-measurement"},
     "kind": {"const": "unfulfilled-capability-dependency"},
-    "consumer": {"const": "corpus-management-team"},
+    "consumer": {"const": "corpus-management-science-services-section"},
     "intended-provider": {"const": "obsmetrologia"},
     "intended-contract": {"const": "deriving-an-enterprise-cover-nerve-rank-leg"},
     "capability": {"type": "string", "minLength": 1},

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:emsenn:corpus-management-team:schema:activity-offer",
+  "$id": "urn:emsenn:corpus-management-science-services-section:schema:activity-offer",
   "type": "object",
   "required": ["@context", "id", "type", "actor", "target", "object"],
   "additionalProperties": false,
@@ -9,7 +9,7 @@
     "id": {"type": "string", "minLength": 1},
     "type": {"const": "Offer"},
     "actor": {"type": "string", "minLength": 1},
-    "target": {"const": "urn:ame:corpus-management-team"},
+    "target": {"const": "urn:ame:corpus-management-science-services-section"},
     "context": {"type": "string", "minLength": 1},
     "object": {
       "type": "object",
