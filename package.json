@@ -1,9 +1,0 @@
-{
-  "name": "@lenticule-science/corpus-management-science-services-section",
-  "description": "corpus-management-science-services-section is a services section of the 561 Group.",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lenticule-science/corpus-management-science-services-section.git"
-  }
-}
