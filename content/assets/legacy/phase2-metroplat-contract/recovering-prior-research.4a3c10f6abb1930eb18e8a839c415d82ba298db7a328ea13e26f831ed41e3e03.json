@@ -1,0 +1,35 @@
+{
+  "kind": "metroplat.contract",
+  "id": "recovering-prior-research",
+  "precondition": {
+    "id": "bounded-recovery-request-and-read-grant",
+    "description": "The contractor either supplies explicit search terms and absolute roots with read-only authority, or names one provider-owned recovery and its exact bundle digests for a zero-read bounded projection."
+  },
+  "move": {
+    "id": "recover-digest-bound-prior-research",
+    "description": "Search authorized path names and file contents, or project an already-settled provider recovery without rereading source territory; rank bounded candidates, preserve source digests and ownership evidence, and report omissions without changing customer territory.",
+    "domain": "ActivityStreams Accept of one provider-authored recovery offer",
+    "codomain": "ContextualBundle plus GapBundle or explicit refusal",
+    "partial": true,
+    "deterministic": true,
+    "effects": ["conditional-filesystem-read", "provider-local-evidence"]
+  },
+  "postcondition": {
+    "id": "recovered-context-is-source-bound-and-gaps-are-explicit",
+    "description": "Every admitted source names its path, digest, ownership evidence, status, matching terms, and bounded snippets; truncation, unreadable files, and unmatched terms remain explicit gaps; a projection names and verifies its source recovery and performs zero source-territory reads; customer territory is unchanged."
+  },
+  "evidencePolicy": {
+    "id": "prior-research-recovery-witness",
+    "required": true,
+    "records": ["provider-authored executable offer", "digest-bound contextual bundle", "explicit gap bundle", "node-local recovery or projection record"],
+    "boundaryObject": "fingerprint"
+  },
+  "refinements": [
+    {
+      "id": "activitystreams-prior-research-provider",
+      "implementation": "src/contract-prior-research-recovery.js",
+      "refines": "tool",
+      "preserves": ["bounded authority", "source identity", "settlement ownership", "explicit absence", "cached recovery reuse", "no customer write"]
+    }
+  ]
+}

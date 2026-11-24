@@ -1,0 +1,12 @@
+{
+  "id": "project-corpus-knowledge-mape",
+  "name": "project-corpus-knowledge-mape",
+  "version": "0.1.0",
+  "structures": ["lib/schemas/activity-offer.schema.json", "lib/schemas/mape-stage.schema.json"],
+  "readings": ["observe project knowledge forms", "derive identifier schema provenance and claim obstructions", "plan non-mutating normalization advice", "emit a corpus-management result"],
+  "writings": ["append node-local EAVT witnesses", "append node-local CloudEvents router notifications"],
+  "codecs": ["application/activity+json", "application/cloudevents+json", "application/jsonl"],
+  "conformance": "content/contracts/managing-project-corpus-knowledge.rml",
+  "closure-rules": ["each stage references its predecessor", "contradictions remain explicit", "analysis selects no action", "execution emits advice and never writes customer territory"],
+  "rung": "scott"
+}

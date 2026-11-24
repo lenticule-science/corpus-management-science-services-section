@@ -1,0 +1,9 @@
+{
+  "id": "project-corpus-knowledge-management",
+  "name": "deriving knowledge-form advice from a supplied project corpus",
+  "from": "an immutable project-corpus snapshot with identifiers schemas provenance and claims not yet measured together",
+  "to": "a witnessed MAPE chain with explicit knowledge-form issues and non-mutating advice",
+  "cost": "bounded local computation and any lawfully witnessed coordination bits",
+  "otherwise": "the Project Management Team lacks a contracted measurement of its project corpus knowledge forms",
+  "needs": ["managing-project-corpus-knowledge"]
+}
